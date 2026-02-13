@@ -334,13 +334,6 @@ class _ProviderServiceDetailsScreenState
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ProviderConfirmServiceDetails(
-                onAccept: () {
-                  // Accept success ke baad kuch karna ho toh
-                  _fetchServiceDetails(); // manually refresh
-                },
-                onReBid: () {
-                  _fetchServiceDetails(); // refresh data
-                },
                 isProvider: true,
                 category: _serviceData!['category']?.toString() ?? 'N/A',
                 serviceId: _serviceData!['id']?.toString() ?? 'N/A',

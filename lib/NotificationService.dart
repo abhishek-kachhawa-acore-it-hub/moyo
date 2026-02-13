@@ -502,20 +502,20 @@ class NotificationService {
 
         // Important: Terminated ya background se aane par → stack clear kar do
         // Kyunki kill hone par purana instance nahi bachta → fresh screen chahiye
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (ctx) => RequestBroadcastScreen(
-              userId: userId,
-              serviceId: serviceId,
-              latitude: latitude,
-              longitude: longitude,
-              categoryName: categoryName,
-              subcategoryName: subcategoryName,
-              amount: amount,
-            ),
-          ),
-          (route) => false, // sab purane routes hata do
-        );
+        // Navigator.of(context).pushAndRemoveUntil(
+        //   MaterialPageRoute(
+        //     builder: (ctx) => RequestBroadcastScreen(
+        //       userId: userId,
+        //       serviceId: serviceId,
+        //       latitude: latitude,
+        //       longitude: longitude,
+        //       categoryName: categoryName,
+        //       subcategoryName: subcategoryName,
+        //       amount: amount,
+        //     ),
+        //   ),
+        //   (route) => false, // sab purane routes hata do
+        // );
 
         // Optional: notification use hone ke baad data clear kar dena
         // prefs.remove(kPendingBroadcastService);
