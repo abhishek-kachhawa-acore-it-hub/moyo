@@ -33,7 +33,6 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
   final String? budget;
   final String? rating;
   final String status;
-  final String? assignedProviderID;
   final VoidCallback? onStartWork;
   final VoidCallback? onSeeWorktime;
   final VoidCallback? onRating;
@@ -67,7 +66,6 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
     this.budget,
     this.rating,
     this.status = "No status",
-    this.assignedProviderID,
     this.durationType,
     this.duration,
     this.price,
@@ -231,10 +229,10 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
               setState(() {
                 if (entered < minAllowed) {
                   amountError =
-                      "Amount must be at least ₹${minAllowed.toStringAsFixed(2)}";
+                  "Amount must be at least ₹${minAllowed.toStringAsFixed(2)}";
                 } else if (entered > maxAllowed) {
                   amountError =
-                      "Amount must not exceed ₹${maxAllowed.toStringAsFixed(2)}";
+                  "Amount must not exceed ₹${maxAllowed.toStringAsFixed(2)}";
                 } else {
                   amountError = null;
                 }
@@ -626,7 +624,6 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
           return;
         }
       }
-      if (onAccept != null) onAccept!();
     } catch (e) {
       _showErrorSnackbar(context, 'Failed to verify profile status');
       return;
@@ -703,18 +700,18 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
           );
 
           // Add delay to show snackbar, then pop
-          // await Future.delayed(Duration(milliseconds: 500));
+          await Future.delayed(Duration(milliseconds: 500));
 
-          // // Pop the screen to go back
-          // if (context.mounted) {
-          //   Navigator.of(context).pop();
-          // }
-        }
-        if (onAccept != null) {
-          onAccept!();
+          // Pop the screen to go back
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
         }
 
         // Call the original onAccept callback if provided
+        if (onAccept != null) {
+          onAccept!();
+        }
       } else {
         // Show error message
         if (context.mounted) {
@@ -866,7 +863,6 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
           return;
         }
       }
-      if (onReBid != null) onReBid!();
     } catch (e) {
       _showErrorSnackbar(context, 'Failed to verify profile status');
       return;
@@ -940,19 +936,19 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
             response.message ?? 'Re-bid submitted successfully',
           );
 
-          // // Add delay to show snackbar, then pop
-          // await Future.delayed(Duration(milliseconds: 500));
+          // Add delay to show snackbar, then pop
+          await Future.delayed(Duration(milliseconds: 500));
 
-          // // Pop the screen to go back
-          // if (context.mounted) {
-          //   Navigator.of(context).pop();
-          // }
-        }
-        if (onReBid != null) {
-          onReBid!();
+          // Pop the screen to go back
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
         }
 
         // Call the original onReBid callback if provided
+        if (onReBid != null) {
+          onReBid!();
+        }
       } else {
         // Show error message
         if (context.mounted) {
@@ -1009,194 +1005,72 @@ class ProviderConfirmServiceDetails extends StatelessWidget {
     );
   }
 
-  // @override
-  // Widget build(BuildContext context) {
-  //   print("Current statuss: $status");
-  //   print("isprovider: $isProvider");
-  //   print("serviceId: $serviceId");
-
-  //   final statusLower = status.toLowerCase();
-
-    
-
-
-
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-  //     child: Container(
-  //       padding: EdgeInsets.only(bottom: 16),
-  //       decoration: BoxDecoration(
-  //         color: Colors.white,
-  //         borderRadius: BorderRadius.circular(10),
-  //       ),
-  //       child: Column(
-  //         spacing: 10,
-  //         children: [
-  //           _catSubCatDate(context, category, subCategory, date),
-
-  //           // Hide SOS section for completed and cancelled
-  //           if (!(statusLower == "completed" || statusLower == "cancelled"))
-  //             _sosPinTimeLeftCallMessage(context, pin, providerPhone),
-
-  //           _dpNameStatus(context, _currentStatusChip(context, status)),
-
-  //           _durationTypeDurationAndPrice(
-  //             context,
-  //             durationType,
-  //             duration,
-  //             price,
-  //           ),
-
-  //           _userAddress(context, address),
-
-  //           if (particular != null) _particular(context, particular!),
-
-  //           _description(context, description),
-
-  //           Consumer<ServiceArrivalProvider>(
-  //             builder: (context, arrivalProvider, child) {
-  //               return _buildCenterContent(context, arrivalProvider);
-  //             },
-  //           ),
-
-  //           // Accept/ReBid buttons - show for 'open' and 'pending' if provider
-  //           if ((statusLower == "open") && isProvider) _acceptReBid(context),
-
-  //           // Cancel button - show for 'assigned' status
-  //           /*   if (statusLower == "assigned" || statusLower == "arrived")
-  //             _cancelTheService(context),*/
-
-  //           // Task complete - show for 'started' or 'in_progress' status
-  //           if (statusLower == "started" || statusLower == "in_progress")
-  //             _taskComplete(context),
-
-  //           // Rate service - show for 'completed' status
-  //           //if (statusLower == "completed") _rateService(context),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-
-
   @override
-Widget build(BuildContext context) {
-  print("Current status: $status");
-  print("isProvider: $isProvider");
-  print("serviceId: $serviceId");
+  Widget build(BuildContext context) {
+    print("Current status: $status");
+    print("isprovider: $isProvider");
+    print("serviceId: $serviceId");
 
-  final statusLower = status.toLowerCase();
+    final statusLower = status.toLowerCase();
 
-  // Yeh check sabse upar rakhenge
-  if (statusLower == "assigned") {
-    return FutureBuilder<bool>(
-      future: checkProvider(context),
-      builder: (context, snapshot) {
-        // Jab tak check ho raha hai, loading dikhao
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
+      child: Container(
+        padding: EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          spacing: 10,
+          children: [
+            _catSubCatDate(context, category, subCategory, date),
 
-        // Error case (rare)
-        if (snapshot.hasError) {
-          return Center(
-            child: Text(
-              "Error checking provider",
-              style: GoogleFonts.roboto(
-                fontSize: 18.sp,
-                color: Colors.red,
-              ),
+            // Hide SOS section for completed and cancelled
+            if (!(statusLower == "completed" || statusLower == "cancelled"))
+              _sosPinTimeLeftCallMessage(context, pin, providerPhone),
+
+            _dpNameStatus(context, _currentStatusChip(context, status)),
+
+            _durationTypeDurationAndPrice(
+              context,
+              durationType,
+              duration,
+              price,
             ),
-          );
-        }
 
-        final isCurrentProvider = snapshot.data ?? false;
+            _userAddress(context, address),
 
-        // Agar current user assigned provider NAHI hai
-        if (!isCurrentProvider) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.info_outline_rounded,
-                    size: 64.sp,
-                    color: Colors.orange.shade700,
-                  ),
-                  SizedBox(height: 24.h),
-                  Text(
-                    "Service is assigned to another provider",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.roboto(
-                      fontSize: 20.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF1D1B20),
-                    ),
-                  ),
-                  SizedBox(height: 12.h),
-                  Text(
-                    "You will be notified when a new service is available for you.",
-                    textAlign: TextAlign.center,
-                    style: GoogleFonts.roboto(
-                      fontSize: 16.sp,
-                      color: Color(0xFF7A7A7A),
-                    ),
-                  ),
-                ],
-              ),
+            if (particular != null) _particular(context, particular!),
+
+            _description(context, description),
+
+            Consumer<ServiceArrivalProvider>(
+              builder: (context, arrivalProvider, child) {
+                return _buildCenterContent(context, arrivalProvider);
+              },
             ),
-          );
-        }
 
-        // Agar yeh current provider ka assigned service hai → normal UI dikhao
-        return _buildNormalServiceUI(context, statusLower);
-      },
+            // Accept/ReBid buttons - show for 'open' and 'pending' if provider
+            if ((statusLower == "open" ) &&
+                isProvider)
+              _acceptReBid(context),
+
+            // Cancel button - show for 'assigned' status
+            /*   if (statusLower == "assigned" || statusLower == "arrived")
+              _cancelTheService(context),*/
+
+            // Task complete - show for 'started' or 'in_progress' status
+            if (statusLower == "started" || statusLower == "in_progress")
+              _taskComplete(context),
+
+            // Rate service - show for 'completed' status
+            //if (statusLower == "completed") _rateService(context),
+          ],
+        ),
+      ),
     );
   }
-
-  // Normal case (assigned nahi hai) → pura UI dikhao
-  return _buildNormalServiceUI(context, statusLower);
-}
-
-
-
-Widget _buildNormalServiceUI(BuildContext context, String statusLower) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-    child: Container(
-      padding: EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: Column(
-        children: [  // ← yahan spacing: 10, hata diya kyunki Column mein spacing nahi hota direct
-          _catSubCatDate(context, category, subCategory, date),
-          if (!(statusLower == "completed" || statusLower == "cancelled"))
-            _sosPinTimeLeftCallMessage(context, pin, providerPhone),
-          _dpNameStatus(context, _currentStatusChip(context, status)),
-          _durationTypeDurationAndPrice(context, durationType, duration, price),
-          _userAddress(context, address),
-          if (particular != null) _particular(context, particular!),
-          _description(context, description),
-          Consumer<ServiceArrivalProvider>(
-            builder: (context, arrivalProvider, child) {
-              return _buildCenterContent(context, arrivalProvider);
-            },
-          ),
-          if ((statusLower == "open") && isProvider) _acceptReBid(context),
-          if (statusLower == "started" || statusLower == "in_progress")
-            _taskComplete(context),
-        ],
-      ),
-    ),
-  );
-}
 
   // Update _acceptReBid to use the new API handler
   Widget _acceptReBid(BuildContext context) {
@@ -1233,9 +1107,9 @@ Widget _buildNormalServiceUI(BuildContext context, String statusLower) {
                       style: GoogleFonts.roboto(
                         textStyle: Theme.of(context).textTheme.labelLarge
                             ?.copyWith(
-                              color: Color(0xFFFFFFFF),
-                              fontWeight: FontWeight.w500,
-                            ),
+                          color: Color(0xFFFFFFFF),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -1269,9 +1143,9 @@ Widget _buildNormalServiceUI(BuildContext context, String statusLower) {
                       style: GoogleFonts.roboto(
                         textStyle: Theme.of(context).textTheme.labelLarge
                             ?.copyWith(
-                              color: Color(0xFFFFFFFF),
-                              fontWeight: FontWeight.w500,
-                            ),
+                          color: Color(0xFFFFFFFF),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
@@ -1283,26 +1157,6 @@ Widget _buildNormalServiceUI(BuildContext context, String statusLower) {
       ),
     );
   }
-
-Future<bool> checkProvider(BuildContext context) async {
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final storedProviderId = prefs.getInt('provider_id');
-     final pid =   storedProviderId.toString();
-
-
-    if (pid == null || pid.isEmpty) {
-      print("No provider_id found in shared preferences");
-      return false;
-    }
-
-    // Dono String compare kar rahe hain (safe rahega)
-    return assignedProviderID == pid;
-  } catch (e) {
-    print("Error in checkProvider: $e");
-    return false;
-  }
-}
 
   Widget _currentStatusChip(BuildContext context, String? status3) {
     final statusLower = status3?.toLowerCase() ?? '';
@@ -1380,7 +1234,7 @@ Future<bool> checkProvider(BuildContext context) async {
           textColor: Color(0xFF616161),
         );
 
-      // Legacy statuses for backward compatibility
+    // Legacy statuses for backward compatibility
       case 'confirmed':
         return _buildStatusChip(
           context,
@@ -1403,11 +1257,11 @@ Future<bool> checkProvider(BuildContext context) async {
   }
 
   Widget _buildStatusChip(
-    BuildContext context, {
-    required String text,
-    required Color backgroundColor,
-    required Color textColor,
-  }) {
+      BuildContext context, {
+        required String text,
+        required Color backgroundColor,
+        required Color textColor,
+      }) {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
@@ -1429,11 +1283,11 @@ Future<bool> checkProvider(BuildContext context) async {
   }
 
   Widget _catSubCatDate(
-    BuildContext context,
-    String? category,
-    String? subCategory,
-    String? date,
-  ) {
+      BuildContext context,
+      String? category,
+      String? subCategory,
+      String? date,
+      ) {
     return Container(
       height: 44,
       padding: EdgeInsets.symmetric(horizontal: 16),
@@ -1472,10 +1326,10 @@ Future<bool> checkProvider(BuildContext context) async {
   }
 
   Widget _sosPinTimeLeftCallMessage(
-    BuildContext context,
-    String? pin,
-    String? providerPhone,
-  ) {
+      BuildContext context,
+      String? pin,
+      String? providerPhone,
+      ) {
     return Consumer<ServiceArrivalProvider>(
       builder: (context, arrivalProvider, child) {
         return Container(
@@ -1594,9 +1448,9 @@ Future<bool> checkProvider(BuildContext context) async {
   }
 
   Widget _buildCenterContent(
-    BuildContext context,
-    ServiceArrivalProvider arrivalProvider,
-  ) {
+      BuildContext context,
+      ServiceArrivalProvider arrivalProvider,
+      ) {
     final statusLower = status.toLowerCase();
 
     // Show timer if arrived and timer is active
@@ -1639,10 +1493,10 @@ Future<bool> checkProvider(BuildContext context) async {
   }
 
   String? _timeLeft(
-    BuildContext context, {
-    String? serviceStartTime,
-    String? duration,
-  }) {
+      BuildContext context, {
+        String? serviceStartTime,
+        String? duration,
+      }) {
     return "03 : 29";
   }
 
@@ -1764,9 +1618,9 @@ Future<bool> checkProvider(BuildContext context) async {
                           style: GoogleFonts.roboto(
                             textStyle: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  fontSize: 18,
-                                ),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 18,
+                            ),
                             color: Color(0xFF1D1B20),
                           ),
                         ),
@@ -1808,81 +1662,77 @@ Future<bool> checkProvider(BuildContext context) async {
     );
   }
 
- Widget _durationTypeDurationAndPrice(
-  BuildContext context,
-  String? durationType,
-  String? duration,
-  String? price,
-) {
-  final isDayMode = duration != null && duration.contains('day'); // ya service_mode check kar sakte ho
-
-  return Container(
-    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    child: Column(  // ← Row ki jagah Column use karo jab day mode ho
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Top row: Duration Type + Price
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            if (durationType != null && durationType.isNotEmpty)
-              Flexible(
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: ColorConstant.moyoOrangeFade,
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  child: Text(
-                    durationType,
-                    style: GoogleFonts.roboto(
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstant.moyoOrange,
-                    ),
-                  ),
-                ),
+  Widget _durationTypeDurationAndPrice(
+      BuildContext context,
+      String? durationType,
+      String? duration,
+      String? price,
+      ) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              decoration: BoxDecoration(
+                color: ColorConstant.moyoOrangeFade,
+                borderRadius: BorderRadius.all(Radius.circular(50)),
               ),
-            if (price != null && price.isNotEmpty)
-              Text(
-                "₹$price/-",
+              child: Text(
+                durationType ?? "No Duration",
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
                 style: GoogleFonts.roboto(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16.sp,
+                  textStyle: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                  color: ColorConstant.moyoOrange,
                 ),
               ),
-          ],
-        ),
-
-        SizedBox(height: 8.h),
-
-        // Duration (alag line mein – day mode ke liye perfect)
-        if (duration != null && duration.isNotEmpty)
-          Row(
-            children: [
-              SvgPicture.asset(
-                "assets/icons/moyo_material-symbols_timer-outline.svg",
-                width: 18.w,
-                height: 18.h,
-              ),
-              SizedBox(width: 6.w),
-              Expanded(
-                child: Text(
-                  duration,
-                  style: GoogleFonts.roboto(
-                    fontSize: 14.sp,
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  maxLines: 2,           // 2 lines tak allow karo
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+            ),
           ),
-      ],
-    ),
-  );
-}
+          Flexible(
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 6,
+              children: [
+                SvgPicture.asset(
+                  "assets/icons/moyo_material-symbols_timer-outline.svg",
+                ),
+                Text(
+                  duration ?? "No Duration",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.roboto(
+                    textStyle: Theme.of(
+                      context,
+                    ).textTheme.labelLarge?.copyWith(color: Color(0xFF000000)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: Text(
+              "₹ ${price ?? "No Price"} /-",
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: GoogleFonts.roboto(
+                textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: Color(0xFF000000),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _userAddress(BuildContext context, String? address) {
     return Container(
@@ -1912,7 +1762,7 @@ Future<bool> checkProvider(BuildContext context) async {
         runSpacing: 8,
         children: [
           ...particular.map(
-            (e) => Container(
+                (e) => Container(
               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
                 color: ColorConstant.moyoOrangeFade,

@@ -114,10 +114,10 @@ class _ConfirmProviderServiceDetailsScreenState
   }
 
   Future<BitmapDescriptor> _createCustomMarkerIcon(
-    IconData iconData,
-    Color color,
-    double size,
-  ) async {
+      IconData iconData,
+      Color color,
+      double size,
+      ) async {
     final pictureRecorder = ui.PictureRecorder();
     final canvas = Canvas(pictureRecorder);
 
@@ -201,7 +201,7 @@ class _ConfirmProviderServiceDetailsScreenState
       // Update location every 5 seconds (reduced from 10s)
       _locationUpdateTimer = Timer.periodic(
         const Duration(seconds: 10),
-        (timer) => _fetchLocationDetails(),
+            (timer) => _fetchLocationDetails(),
       );
     } catch (e) {
       setState(() {
@@ -233,8 +233,8 @@ class _ConfirmProviderServiceDetailsScreenState
           );
           providerId =
               payload['provider_id']?.toString() ??
-              payload['id']?.toString() ??
-              payload['sub']?.toString();
+                  payload['id']?.toString() ??
+                  payload['sub']?.toString();
         } else {
           providerId = providerToken;
         }
@@ -266,9 +266,9 @@ class _ConfirmProviderServiceDetailsScreenState
 
         // ✅ FIX: Extract the 'data' field from the response
         final data =
-            responseData is Map<String, dynamic> &&
-                responseData['success'] == true &&
-                responseData['data'] != null
+        responseData is Map<String, dynamic> &&
+            responseData['success'] == true &&
+            responseData['data'] != null
             ? responseData['data']
             : responseData;
 
@@ -301,9 +301,9 @@ class _ConfirmProviderServiceDetailsScreenState
 
         // ✅ FIX: Handle both nested and direct response formats
         final data =
-            responseData is Map<String, dynamic> &&
-                responseData['success'] == true &&
-                responseData['data'] != null
+        responseData is Map<String, dynamic> &&
+            responseData['success'] == true &&
+            responseData['data'] != null
             ? responseData['data']
             : responseData;
 
@@ -567,9 +567,9 @@ class _ConfirmProviderServiceDetailsScreenState
   }
 
   Future<List<LatLng>> _getDirectionsRoute(
-    LatLng origin,
-    LatLng destination,
-  ) async {
+      LatLng origin,
+      LatLng destination,
+      ) async {
     try {
       final String url =
           'https://maps.googleapis.com/maps/api/directions/json?origin=${origin.latitude},${origin.longitude}&destination=${destination.latitude},${destination.longitude}&key=$GOOGLE_MAPS_API_KEY&mode=driving';
@@ -655,7 +655,7 @@ class _ConfirmProviderServiceDetailsScreenState
         markerId: const MarkerId('service_location'),
         position: serviceLocation,
         icon:
-            _userMarkerIcon ??
+        _userMarkerIcon ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         anchor: const Offset(0.5, 0.5),
         infoWindow: const InfoWindow(title: 'Service Location'),
@@ -665,7 +665,7 @@ class _ConfirmProviderServiceDetailsScreenState
         markerId: const MarkerId('provider_location'),
         position: providerLocation,
         icon:
-            _providerMarkerIcon ??
+        _providerMarkerIcon ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
         anchor: const Offset(0.5, 0.5),
         infoWindow: const InfoWindow(
@@ -760,16 +760,16 @@ class _ConfirmProviderServiceDetailsScreenState
   }
 
   double _calculateDistance(
-    double lat1,
-    double lon1,
-    double lat2,
-    double lon2,
-  ) {
+      double lat1,
+      double lon1,
+      double lat2,
+      double lon2,
+      ) {
     const p = 0.017453292519943295;
     final a =
         0.5 -
-        cos((lat2 - lat1) * p) / 2 +
-        cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
+            cos((lat2 - lat1) * p) / 2 +
+            cos(lat1 * p) * cos(lat2 * p) * (1 - cos((lon2 - lon1) * p)) / 2;
     return 12742 * asin(sqrt(a));
   }
 
@@ -880,334 +880,332 @@ class _ConfirmProviderServiceDetailsScreenState
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
-                  SizedBox(height: 16.h),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 32.w),
-                    child: Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16.sp),
-                    ),
-                  ),
-                  SizedBox(height: 16.h),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        _isLoading = true;
-                        _errorMessage = null;
-                      });
-                      _initializeAndFetchData();
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 32.w,
-                        vertical: 12.h,
-                      ),
-                    ),
-                    child: Text('Retry', style: TextStyle(fontSize: 16.sp)),
-                  ),
-                ],
-              ),
-            )
-          : _serviceData == null
-          ? Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.error_outline, size: 64.sp, color: Colors.red),
+            SizedBox(height: 16.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 32.w),
               child: Text(
-                'No service data available',
+                _errorMessage!,
+                textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16.sp),
               ),
-            )
+            ),
+            SizedBox(height: 16.h),
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _isLoading = true;
+                  _errorMessage = null;
+                });
+                _initializeAndFetchData();
+              },
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(
+                  horizontal: 32.w,
+                  vertical: 12.h,
+                ),
+              ),
+              child: Text('Retry', style: TextStyle(fontSize: 16.sp)),
+            ),
+          ],
+        ),
+      )
+          : _serviceData == null
+          ? Center(
+        child: Text(
+          'No service data available',
+          style: TextStyle(fontSize: 16.sp),
+        ),
+      )
           : Consumer<ServiceArrivalProvider>(
-              builder: (context, arrivalProvider, child) {
-                return SingleChildScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      ProviderConfirmServiceDetails(
-                        isProvider: true,
-                        user_id: _serviceData!['user_id']?.toString() ?? 'N/A',
-                        category:
-                            _serviceData!['category']?.toString() ?? 'N/A',
-                        serviceId: _serviceData!['id']?.toString() ?? 'N/A',
-                        subCategory:
-                            _serviceData!['service']?.toString() ??
-                            _serviceData!['title']?.toString() ??
-                            'N/A',
-                        date:
-                            _formatDate(_serviceData!['schedule_date']) +
-                            _formatTime(_serviceData!['schedule_time']),
-                        pin: _serviceData!['start_otp']?.toString() ?? 'N/A',
-                        providerPhone:
-                            _serviceData!['user']?['mobile']?.toString() ??
-                            'N/A',
-                        dp:
-                            _serviceData!['user']?['image']?.toString() ??
-                            'https://picsum.photos/200/200',
-                        name:
-                            '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
-                                .trim()
-                                .isEmpty
-                            ? 'N/A'
-                            : '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
-                                  .trim(),
-                        rating: "4.5",
-                        status:
-                            _serviceData!['status']?.toString() ?? 'pending',
-                             assignedProviderID:
-                            _serviceData!['assigned_provider_id']?.toString() ?? '',
-                        durationType: _getDurationType(
-                          _serviceData!['service_mode']?.toString(),
-                        ),
-                        duration: _formatDuration(_serviceData!),
-                        price: _serviceData!['bid']?['amount']?.toString(),
-                        address: _serviceData!['location']?.toString() ?? 'N/A',
-                        particular: _buildParticulars(_serviceData!),
-                        description:
-                            _serviceData!['description']?.toString() ?? 'N/A',
-                        onStartWork: _showOTPDialog,
-                        onTaskComplete: _showEndWorkOTPDialog,
-                        onSeeWorktime: _navigateToTimerScreen,
-                      ),
-                      if (_serviceData!['status']?.toString() != "Completed")
-                        if (_locationData != null && _shouldShowMap()) ...[
-                          SizedBox(height: 16.h),
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 10.w),
-                            child: GestureDetector(
-                              onTap: _openFullScreenMapWithAnimation,
-                              // Simple tap to open
-                              child: Container(
-                                height: 300.h,
-                                width: double.infinity,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(20.r),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(20.r),
-                                      child: AbsorbPointer(
-                                        child: GoogleMap(
-                                          initialCameraPosition: CameraPosition(
-                                            target: LatLng(
-                                              double.parse(
-                                                _locationData!['latitude']
-                                                        ?.toString() ??
-                                                    '0',
-                                              ),
-                                              double.parse(
-                                                _locationData!['longitude']
-                                                        ?.toString() ??
-                                                    '0',
-                                              ),
-                                            ),
-                                            zoom: 13,
-                                          ),
-                                          markers: _markers,
-                                          polylines: _polylines,
-                                          circles: _circles,
-                                          myLocationButtonEnabled: false,
-                                          zoomControlsEnabled: false,
-                                          compassEnabled: false,
-                                          mapToolbarEnabled: false,
-                                          myLocationEnabled: false,
-                                          mapType: MapType.normal,
-                                          onMapCreated: (controller) {
-                                            _mapController = controller;
-                                            _isMapReady = true;
-                                            _setupMap();
-                                          },
-                                        ),
-                                      ),
-                                    ),
-                                    // Tap indicator overlay
-                                    Positioned(
-                                      bottom: 16.h,
-                                      right: 16.w,
-                                      child: Container(
-                                        padding: EdgeInsets.symmetric(
-                                          horizontal: 12.w,
-                                          vertical: 8.h,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white.withOpacity(0.9),
-                                          borderRadius: BorderRadius.circular(
-                                            8.r,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.2,
-                                              ),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(
-                                              Icons.fullscreen,
-                                              size: 18.sp,
-                                              color: Colors.blue,
-                                            ),
-                                            SizedBox(width: 6.w),
-                                            Text(
-                                              'Tap to expand',
-                                              style: TextStyle(
-                                                fontSize: 12.sp,
-                                                fontWeight: FontWeight.w500,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
+        builder: (context, arrivalProvider, child) {
+          return SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ProviderConfirmServiceDetails(
+                  isProvider: true,
+                  user_id: _serviceData!['user_id']?.toString() ?? 'N/A',
+                  category:
+                  _serviceData!['category']?.toString() ?? 'N/A',
+                  serviceId: _serviceData!['id']?.toString() ?? 'N/A',
+                  subCategory:
+                  _serviceData!['service']?.toString() ??
+                      _serviceData!['title']?.toString() ??
+                      'N/A',
+                  date:
+                  _formatDate(_serviceData!['schedule_date']) +
+                      _formatTime(_serviceData!['schedule_time']),
+                  pin: _serviceData!['start_otp']?.toString() ?? 'N/A',
+                  providerPhone:
+                  _serviceData!['user']?['mobile']?.toString() ??
+                      'N/A',
+                  dp:
+                  _serviceData!['user']?['image']?.toString() ??
+                      'https://picsum.photos/200/200',
+                  name:
+                  '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
+                      .trim()
+                      .isEmpty
+                      ? 'N/A'
+                      : '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
+                      .trim(),
+                  rating: "4.5",
+                  status:
+                  _serviceData!['status']?.toString() ?? 'pending',
+                  durationType: _getDurationType(
+                    _serviceData!['service_mode']?.toString(),
+                  ),
+                  duration: _formatDuration(_serviceData!),
+                  price: _serviceData!['bid']?['amount']?.toString(),
+                  address: _serviceData!['location']?.toString() ?? 'N/A',
+                  particular: _buildParticulars(_serviceData!),
+                  description:
+                  _serviceData!['description']?.toString() ?? 'N/A',
+                  onStartWork: _showOTPDialog,
+                  onTaskComplete: _showEndWorkOTPDialog,
+                  onSeeWorktime: _navigateToTimerScreen,
+                ),
+                if (_serviceData!['status']?.toString() != "Completed")
+                  if (_locationData != null && _shouldShowMap()) ...[
+                    SizedBox(height: 16.h),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10.w),
+                      child: GestureDetector(
+                        onTap: _openFullScreenMapWithAnimation,
+                        // Simple tap to open
+                        child: Container(
+                          height: 300.h,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20.r),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                            ),
+                            ],
                           ),
-
-                          SizedBox(height: 12.h),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          child: Stack(
                             children: [
-                              Container(
-                                padding: EdgeInsets.all(8.w),
-                                decoration: const BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.access_time,
-                                  color: Colors.black87,
-                                  size: 20.sp,
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(20.r),
+                                child: AbsorbPointer(
+                                  child: GoogleMap(
+                                    initialCameraPosition: CameraPosition(
+                                      target: LatLng(
+                                        double.parse(
+                                          _locationData!['latitude']
+                                              ?.toString() ??
+                                              '0',
+                                        ),
+                                        double.parse(
+                                          _locationData!['longitude']
+                                              ?.toString() ??
+                                              '0',
+                                        ),
+                                      ),
+                                      zoom: 13,
+                                    ),
+                                    markers: _markers,
+                                    polylines: _polylines,
+                                    circles: _circles,
+                                    myLocationButtonEnabled: false,
+                                    zoomControlsEnabled: false,
+                                    compassEnabled: false,
+                                    mapToolbarEnabled: false,
+                                    myLocationEnabled: false,
+                                    mapType: MapType.normal,
+                                    onMapCreated: (controller) {
+                                      _mapController = controller;
+                                      _isMapReady = true;
+                                      _setupMap();
+                                    },
+                                  ),
                                 ),
                               ),
-                              SizedBox(width: 12.w),
-                              Text(
-                                'Arriving in $_arrivalTime minutes',
-                                style: TextStyle(
-                                  color: Colors.black87,
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w600,
+                              // Tap indicator overlay
+                              Positioned(
+                                bottom: 16.h,
+                                right: 16.w,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 12.w,
+                                    vertical: 8.h,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.9),
+                                    borderRadius: BorderRadius.circular(
+                                      8.r,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(
+                                          0.2,
+                                        ),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.fullscreen,
+                                        size: 18.sp,
+                                        color: Colors.blue,
+                                      ),
+                                      SizedBox(width: 6.w),
+                                      Text(
+                                        'Tap to expand',
+                                        style: TextStyle(
+                                          fontSize: 12.sp,
+                                          fontWeight: FontWeight.w500,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
                           ),
+                        ),
+                      ),
+                    ),
 
-                          if (_isNearDestination &&
-                              !arrivalProvider.hasArrived) ...[
-                            SizedBox(height: 16.h),
-                            Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20.w),
-                              child: Column(
+                    SizedBox(height: 12.h),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(8.w),
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.access_time,
+                            color: Colors.black87,
+                            size: 20.sp,
+                          ),
+                        ),
+                        SizedBox(width: 12.w),
+                        Text(
+                          'Arriving in $_arrivalTime minutes',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    if (_isNearDestination &&
+                        !arrivalProvider.hasArrived) ...[
+                      SizedBox(height: 16.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Column(
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(12.w),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12.r),
+                                border: Border.all(
+                                  color: Colors.green,
+                                  width: 2,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                MainAxisAlignment.center,
                                 children: [
-                                  Container(
-                                    padding: EdgeInsets.all(12.w),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(12.r),
-                                      border: Border.all(
-                                        color: Colors.green,
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.location_on,
-                                          color: Colors.green,
-                                          size: 24.sp,
-                                        ),
-                                        SizedBox(width: 8.w),
-                                        Text(
-                                          'You are ${_distanceToDestination.round()}m from destination',
-                                          style: TextStyle(
-                                            color: Colors.green,
-                                            fontSize: 16.sp,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                  Icon(
+                                    Icons.location_on,
+                                    color: Colors.green,
+                                    size: 24.sp,
                                   ),
-                                  SizedBox(height: 12.h),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 56.h,
-                                    child: ElevatedButton(
-                                      onPressed:
-                                          arrivalProvider.isProcessingArrival
-                                          ? null
-                                          : _handleArrived,
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: Colors.green,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12.r,
-                                          ),
-                                        ),
-                                        elevation: 4,
-                                      ),
-                                      child: arrivalProvider.isProcessingArrival
-                                          ? SizedBox(
-                                              height: 24.h,
-                                              width: 24.w,
-                                              child:
-                                                  const CircularProgressIndicator(
-                                                    color: Colors.white,
-                                                    strokeWidth: 2,
-                                                  ),
-                                            )
-                                          : Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                Icon(
-                                                  Icons.check_circle,
-                                                  size: 28.sp,
-                                                ),
-                                                SizedBox(width: 12.w),
-                                                Text(
-                                                  'I\'ve Arrived',
-                                                  style: TextStyle(
-                                                    fontSize: 18.sp,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
+                                  SizedBox(width: 8.w),
+                                  Text(
+                                    'You are ${_distanceToDestination.round()}m from destination',
+                                    style: TextStyle(
+                                      color: Colors.green,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            SizedBox(height: 12.h),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 56.h,
+                              child: ElevatedButton(
+                                onPressed:
+                                arrivalProvider.isProcessingArrival
+                                    ? null
+                                    : _handleArrived,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.green,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                      12.r,
+                                    ),
+                                  ),
+                                  elevation: 4,
+                                ),
+                                child: arrivalProvider.isProcessingArrival
+                                    ? SizedBox(
+                                  height: 24.h,
+                                  width: 24.w,
+                                  child:
+                                  const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                                    : Row(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.check_circle,
+                                      size: 28.sp,
+                                    ),
+                                    SizedBox(width: 12.w),
+                                    Text(
+                                      'I\'ve Arrived',
+                                      style: TextStyle(
+                                        fontSize: 18.sp,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
-                        ],
-                      SizedBox(height: 16.h),
+                        ),
+                      ),
                     ],
-                  ),
-                );
-              },
+                  ],
+                SizedBox(height: 16.h),
+              ],
             ),
+          );
+        },
+      ),
     );
   }
 

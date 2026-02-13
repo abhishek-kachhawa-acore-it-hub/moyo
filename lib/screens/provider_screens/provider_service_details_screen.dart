@@ -203,45 +203,23 @@ class _ProviderServiceDetailsScreenState
       return ' at $timeString';
     }
   }
-String _formatDuration(Map<String, dynamic> data) {
-  print('I LOVE YOU ');
-  print('peacock');
 
-  final mode = data['service_mode'] as String?;
-  final value = data['duration_value'];
-  final dayvalue = data['service_days'];
-  final unit = data['duration_unit'] as String?;
+  String _formatDuration(Map<String, dynamic> data) {
+    final mode = data['service_mode'];
+    final value = data['duration_value'];
+    final unit = data['duration_unit'];
 
-  if (mode == null) return 'N/A';
+    if (mode == null || value == null) return 'N/A';
 
-  if (mode == 'hrs') {
-    final unitText = unit ?? 'hour';
-    return '$value $unitText${value > 1 ? 's' : ''}';
-  } 
-  else if (mode == 'day' || mode == 'days') {
-    // Only try to parse if both dates exist
-    String dateRange = '';
-    final startDate = data['start_date'] as String?;
-    final endDate   = data['end_date']   as String?;
-
-    if (startDate != null && endDate != null) {
-      try {
-        final parsedStart = DateTime.parse(startDate);
-        final parsedEnd   = DateTime.parse(endDate);
-        final fmt = DateFormat("dd MMMM yyyy");
-        dateRange = ' (${fmt.format(parsedStart)} - ${fmt.format(parsedEnd)})';
-      } catch (e) {
-        dateRange = ' (date format error)';
-      }
-    } else {
-      dateRange = ' (dates not set)';
+    if (mode == 'hrs') {
+      final unitText = unit ?? 'hour';
+      return '$value $unitText${value > 1 ? 's' : ''}';
+    } else if (mode == 'days') {
+      return '$value day${value > 1 ? 's' : ''}';
     }
-
-    return '$dayvalue day${(dayvalue ?? 0) > 1 ? 's' : ''}$dateRange';
+    return 'N/A';
   }
 
-  return 'N/A';
-}
   String _getDurationType(String? mode) {
     if (mode == null) return 'One Time';
     if (mode == 'hrs') return 'Hourly';
@@ -356,13 +334,6 @@ String _formatDuration(Map<String, dynamic> data) {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ProviderConfirmServiceDetails(
-                onAccept: () {
-    // Accept success ke baad kuch karna ho toh
-    _fetchServiceDetails(); // manually refresh
-  },
-  onReBid: () {
-    _fetchServiceDetails(); // refresh data
-  },
                 isProvider: true,
                 category: _serviceData!['category']?.toString() ?? 'N/A',
                 serviceId: _serviceData!['id']?.toString() ?? 'N/A',
@@ -389,9 +360,6 @@ String _formatDuration(Map<String, dynamic> data) {
                 rating: "4.5",
                 // Rating not in response, using default
                 status: _serviceData!['status']?.toString() ?? 'pending',
-                 assignedProviderID:
-                            _serviceData!['assigned_provider_id']?.toString() ?? '',
-                
                 durationType: _getDurationType(
                   _serviceData!['service_mode']?.toString(),
                 ),
