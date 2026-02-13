@@ -107,8 +107,8 @@ class _ProviderServiceDetailsScreenState
           );
           providerId =
               payload['provider_id']?.toString() ??
-              payload['id']?.toString() ??
-              payload['sub']?.toString();
+                  payload['id']?.toString() ??
+                  payload['sub']?.toString();
         } else {
           // Token might be the provider_id itself
           providerId = providerToken;
@@ -144,8 +144,7 @@ class _ProviderServiceDetailsScreenState
         if (responseData['success'] == true && responseData['data'] != null) {
           if (mounted) {
             setState(() {
-              _serviceData =
-                  responseData['data']; // Use 'data' field, not the root
+              _serviceData = responseData['data']; // Use 'data' field, not the root
               _isLoading = false;
             });
           }
@@ -178,7 +177,6 @@ class _ProviderServiceDetailsScreenState
       _isFetching = false;
     }
   }
-
   String _formatDate(String? dateString) {
     if (dateString == null || dateString.isEmpty) return 'N/A';
     try {
@@ -288,56 +286,44 @@ class _ProviderServiceDetailsScreenState
   @override
   Widget build(BuildContext context) {
     print(_errorMessage);
-
-
-        return WillPopScope(
-     onWillPop: () async {
-  if (Navigator.of(context).canPop()) {
-    Navigator.of(context).pop();
-  } else {
-    Navigator.of(context).pushReplacementNamed('/ProviderCustomBottomNav');
-  }
-  return false;
-},
-      child:  Scaffold(
+    return Scaffold(
       backgroundColor: ColorConstant.moyoScaffoldGradient,
       appBar: UserOnlyTitleAppbar(title: "Service Details"),
-
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
           ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 64,
-                      color: Colors.red,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      _errorMessage!,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _isLoading = true;
-                          _errorMessage = null;
-                        });
-                        _initializeAndFetchData();
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
-                ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
               ),
-            )
+              const SizedBox(height: 16),
+              Text(
+                _errorMessage!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    _isLoading = true;
+                    _errorMessage = null;
+                  });
+                  _initializeAndFetchData();
+                },
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      )
           : _serviceData == null
           ? const Center(child: Text('No service data available'))
           : SingleChildScrollView(
@@ -348,13 +334,6 @@ class _ProviderServiceDetailsScreenState
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               ProviderConfirmServiceDetails(
-                onAccept: () {
-    // Accept success ke baad kuch karna ho toh
-    _fetchServiceDetails(); // manually refresh
-  },
-  onReBid: () {
-    _fetchServiceDetails(); // refresh data
-  },
                 isProvider: true,
                 category: _serviceData!['category']?.toString() ?? 'N/A',
                 serviceId: _serviceData!['id']?.toString() ?? 'N/A',
@@ -381,9 +360,6 @@ class _ProviderServiceDetailsScreenState
                 rating: "4.5",
                 // Rating not in response, using default
                 status: _serviceData!['status']?.toString() ?? 'pending',
-                 assignedProviderID:
-                            _serviceData!['assigned_provider_id']?.toString() ?? '',
-                
                 durationType: _getDurationType(
                   _serviceData!['service_mode']?.toString(),
                 ),
