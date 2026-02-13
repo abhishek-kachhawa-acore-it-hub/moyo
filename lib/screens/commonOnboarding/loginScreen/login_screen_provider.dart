@@ -43,7 +43,8 @@ class LoginProvider with ChangeNotifier {
       final response = await http.post(
         Uri.parse('$base_url/api/auth/send-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'mobile': mobile}),
+        body: jsonEncode({'mobile': mobile,"appSignature":"j90XPSjP502"
+        }),
       );
 
       _isLoading = false;

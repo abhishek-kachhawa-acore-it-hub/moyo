@@ -36,7 +36,8 @@ class _OtpScreenState extends State<OtpScreen> with CodeAutoFill {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _focusNodes.first.requestFocus();
       context.read<OtpScreenProvider>().startTimer();
-      _initSmsListener();
+      // _initSmsListener();
+       listenForCode(); 
 
       // Get and display app signature
       AppSignatureHelper.getAppSignature();
@@ -52,6 +53,7 @@ class _OtpScreenState extends State<OtpScreen> with CodeAutoFill {
     for (final f in _focusNodes) {
       f.dispose();
     }
+     cancel(); 
     super.dispose();
   }
 
@@ -73,15 +75,15 @@ class _OtpScreenState extends State<OtpScreen> with CodeAutoFill {
   }
 
   /// Initialize SMS auto-fill listener
-  Future<void> _initSmsListener() async {
-    try {
-      // Listen for SMS with proper error handling
-      await SmsAutoFill().listenForCode;
-      print('✓ SMS listener started successfully');
-    } catch (e) {
-      print('✗ Error starting SMS listener: $e');
-    }
-  }
+  // Future<void> _initSmsListener() async {
+  //   try {
+  //     // Listen for SMS with proper error handling
+  //     await SmsAutoFill().listenForCode;
+  //     print('✓ SMS listener started successfully');
+  //   } catch (e) {
+  //     print('✗ Error starting SMS listener: $e');
+  //   }
+  // }
 
   String _getOtpFromControllers() {
     return _controllers.map((c) => c.text).join();

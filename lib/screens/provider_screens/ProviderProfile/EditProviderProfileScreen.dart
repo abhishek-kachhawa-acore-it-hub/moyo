@@ -220,12 +220,13 @@ class _EditProviderProfileScreenState extends State<EditProviderProfileScreen> {
         if (_isRegistered && !wasRegistered) {
           // User just completed registration for the first time
           // Navigate to ProviderCustomBottomNav
-          Navigator.pushNamedAndRemoveUntil(
-            context,
-            "/ProviderCustomBottomNav",
-            (route) => false, // Remove all previous routes
-          );
-          context.read<ProviderNavigationProvider>().currentIndex = 0;
+          // Navigator.pushNamedAndRemoveUntil(
+          //   context,
+          //   "/ProviderCustomBottomNav",
+          //   (route) => false, // Remove all previous routes
+          // );
+          // context.read<ProviderNavigationProvider>().currentIndex = 0;
+            Navigator.pop(context, true);
         } else {
           // User is just editing their profile (already registered)
           // Just pop back to previous screen
