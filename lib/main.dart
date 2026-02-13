@@ -78,8 +78,6 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Body: ${message.notification?.body}");
   print("Data: ${message.data}");
 
-  // Background notifications are automatically shown by Firebase
-  // You can add custom logic here if needed
 }
 
 // ================== MAIN ==================

@@ -3,7 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../../../../constants/colorConstant/color_constant.dart';
@@ -33,8 +32,7 @@ class ProviderChatScreen extends StatefulWidget {
   State<ProviderChatScreen> createState() => _ProviderChatScreenState();
 }
 
-class _ProviderChatScreenState extends State<ProviderChatScreen>
-    with WidgetsBindingObserver {
+class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBindingObserver {
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final FocusNode _focusNode = FocusNode();
@@ -78,190 +76,88 @@ class _ProviderChatScreenState extends State<ProviderChatScreen>
     if (state == AppLifecycleState.resumed) {
       // ✅ Screen is active again
       _startPolling();
-    } else if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
+    } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       // ✅ Screen is inactive
       _stopPolling();
     }
   }
 
+  Future<void> _initializeChat() async {
+    print("=== _initializeChat called ===");
 
-  bool _isInitializing = false;
-
-Future<void> _initializeChat() async {
-  print("=== _initializeChat called ===");
-
-  if (_isInitializing) {
-    print("Already initializing → ignoring duplicate call");
-    return;
-  }
-
-  if (widget.serviceId == null || widget.providerId == null) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Missing service or provider information'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-          action: SnackBarAction(
-            label: 'GO BACK',
-            textColor: Colors.white,
-            onPressed: () => Navigator.pop(context),
-          ),
-        ),
-      );
-    }
-    return;
-  }
-
-  _isInitializing = true;
-
-  try {
-    final chatProvider = Provider.of<ProviderChatProvider>(
-      context,
-      listen: false,
-    );
-
-       final prefs = await SharedPreferences.getInstance();
-
-      final providerId = prefs.getInt('provider_id');
-
-      print('abhishek bhai pro ID $providerId');
-
-    
-
-    final success = await chatProvider.initiateChat(
-      serviceId: widget.serviceId!,
-      // providerId: widget.providerId ?? providerId.toString(),
-      providerId: providerId.toString()  ,
-
-      
-    );
-
-    if (success) {
-      setState(() {
-        _chatInitialized = true;
-      });
-
-      _startPolling();
-
-      await Future.delayed(Duration(milliseconds: 300));
-      _scrollToBottom(immediate: true);
-    } else {
-      if (mounted && chatProvider.error != null) {
+    if (widget.serviceId == null || widget.providerId == null) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(chatProvider.error!),
+            content: Text('Missing service or provider information'),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'GO BACK',
+              textColor: Colors.white,
+              onPressed: () => Navigator.pop(context),
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final chatProvider = Provider.of<ProviderChatProvider>(
+        context,
+        listen: false,
+      );
+
+      final success = await chatProvider.initiateChat(
+        serviceId: widget.serviceId!,
+        providerId: widget.providerId!,
+      );
+
+      if (success) {
+        setState(() {
+          _chatInitialized = true;
+        });
+
+        // ✅ Start polling when chat is initialized
+        _startPolling();
+
+        await Future.delayed(Duration(milliseconds: 300));
+        _scrollToBottom(immediate: true);
+      } else {
+        if (mounted && chatProvider.error != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(chatProvider.error!),
+              backgroundColor: Colors.red,
+              duration: Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'RETRY',
+                textColor: Colors.white,
+                onPressed: () => _initializeChat(),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print("Error in _initializeChat: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to initialize chat'),
             backgroundColor: Colors.red,
             duration: Duration(seconds: 5),
-            action: chatProvider.isLoading
-                ? null
-                : SnackBarAction(
-                    label: 'RETRY',
-                    textColor: Colors.white,
-                    onPressed: _initializeChat,
-                  ),
+            action: SnackBarAction(
+              label: 'RETRY',
+              textColor: Colors.white,
+              onPressed: () => _initializeChat(),
+            ),
           ),
         );
       }
     }
-  } catch (e) {
-    print("Error in _initializeChat: $e");
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to initialize chat'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 5),
-          action: SnackBarAction(
-            label: 'RETRY',
-            textColor: Colors.white,
-            onPressed: _initializeChat,
-          ),
-        ),
-      );
-    }
-  } finally {
-    _isInitializing = false;
   }
-}
-
-  // Future<void> _initializeChat() async {
-  //   print("=== _initializeChat called ===");
-
-  //   if (widget.serviceId == null || widget.providerId == null) {
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text('Missing service or provider information'),
-  //           backgroundColor: Colors.red,
-  //           duration: Duration(seconds: 3),
-  //           action: SnackBarAction(
-  //             label: 'GO BACK',
-  //             textColor: Colors.white,
-  //             onPressed: () => Navigator.pop(context),
-  //           ),
-  //         ),
-  //       );
-  //     }
-  //     return;
-  //   }
-
-  //   try {
-  //     final chatProvider = Provider.of<ProviderChatProvider>(
-  //       context,
-  //       listen: false,
-  //     );
-
-  //     final success = await chatProvider.initiateChat(
-  //       serviceId: widget.serviceId!,
-  //       providerId: widget.providerId!,
-  //     );
-
-  //     if (success) {
-  //       setState(() {
-  //         _chatInitialized = true;
-  //       });
-
-  //       // ✅ Start polling when chat is initialized
-  //       _startPolling();
-
-  //       await Future.delayed(Duration(milliseconds: 300));
-  //       _scrollToBottom(immediate: true);
-  //     } else {
-  //       if (mounted && chatProvider.error != null) {
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(
-  //             content: Text(chatProvider.error!),
-  //             backgroundColor: Colors.red,
-  //             duration: Duration(seconds: 5),
-  //             action: SnackBarAction(
-  //               label: 'RETRY',
-  //               textColor: Colors.white,
-  //               onPressed: () => _initializeChat(),
-  //             ),
-  //           ),
-  //         );
-  //       }
-  //     }
-  //   } catch (e) {
-  //     print("Error in _initializeChat: $e");
-  //     if (mounted) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(
-  //           content: Text('Failed to initialize chat'),
-  //           backgroundColor: Colors.red,
-  //           duration: Duration(seconds: 5),
-  //           action: SnackBarAction(
-  //             label: 'RETRY',
-  //             textColor: Colors.white,
-  //             onPressed: () => _initializeChat(),
-  //           ),
-  //         ),
-  //       );
-  //     }
-  //   }
-  // }
 
   // ✅ Start polling chat history every second
   void _startPolling() {
@@ -284,10 +180,7 @@ Future<void> _initializeChat() async {
       }
 
       if (chatProvider.chatId != null) {
-        await chatProvider.fetchChatHistory(
-          chatId: chatProvider.chatId!,
-          silent: true,
-        );
+        await chatProvider.fetchChatHistory(chatId: chatProvider.chatId!, silent: true);
       }
     });
   }
@@ -401,7 +294,6 @@ Future<void> _initializeChat() async {
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
-    Provider.of<ProviderChatProvider>(context, listen: false).reset();
     super.dispose();
   }
 
@@ -514,33 +406,33 @@ Future<void> _initializeChat() async {
                 child: ClipOval(
                   child: widget.userImage != null
                       ? CachedNetworkImage(
-                          imageUrl: widget.userImage!,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            color: ColorConstant.moyoOrangeFade,
-                            child: Icon(
-                              Icons.person,
-                              color: ColorConstant.moyoOrange,
-                              size: 20.sp,
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            color: ColorConstant.moyoOrangeFade,
-                            child: Icon(
-                              Icons.person,
-                              color: ColorConstant.moyoOrange,
-                              size: 20.sp,
-                            ),
-                          ),
-                        )
+                    imageUrl: widget.userImage!,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Container(
+                      color: ColorConstant.moyoOrangeFade,
+                      child: Icon(
+                        Icons.person,
+                        color: ColorConstant.moyoOrange,
+                        size: 20.sp,
+                      ),
+                    ),
+                    errorWidget: (context, url, error) => Container(
+                      color: ColorConstant.moyoOrangeFade,
+                      child: Icon(
+                        Icons.person,
+                        color: ColorConstant.moyoOrange,
+                        size: 20.sp,
+                      ),
+                    ),
+                  )
                       : Container(
-                          color: ColorConstant.moyoOrangeFade,
-                          child: Icon(
-                            Icons.person,
-                            color: ColorConstant.moyoOrange,
-                            size: 20.sp,
-                          ),
-                        ),
+                    color: ColorConstant.moyoOrangeFade,
+                    child: Icon(
+                      Icons.person,
+                      color: ColorConstant.moyoOrange,
+                      size: 20.sp,
+                    ),
+                  ),
                 ),
               ),
               if (widget.isOnline)
@@ -613,7 +505,7 @@ Future<void> _initializeChat() async {
             : null;
         final showDate =
             prevMessage == null ||
-            !_isSameDay(message.createdAt, prevMessage!.createdAt);
+                !_isSameDay(message.createdAt, prevMessage!.createdAt);
 
         final isSentByMe = message.senderType.toLowerCase() == 'provider';
 
@@ -831,19 +723,19 @@ Future<void> _initializeChat() async {
               ),
               child: _isSending
                   ? Padding(
-                      padding: EdgeInsets.all(12.w),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
+                padding: EdgeInsets.all(12.w),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
                   : Icon(
-                      Icons.send,
-                      color: (_isTyping && _chatInitialized)
-                          ? Colors.white
-                          : ColorConstant.moyoOrange,
-                      size: 20.sp,
-                    ),
+                Icons.send,
+                color: (_isTyping && _chatInitialized)
+                    ? Colors.white
+                    : ColorConstant.moyoOrange,
+                size: 20.sp,
+              ),
             ),
           ),
         ],

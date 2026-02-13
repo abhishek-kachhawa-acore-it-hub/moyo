@@ -293,12 +293,14 @@ class ProviderChatProvider with ChangeNotifier {
           .timeout(Duration(seconds: 12));
 
       print("Status: ${response.statusCode}");
-      print("Response body: ${response.body}");
+      print("Response bodydfdsfs: ${response.body}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['chat'] != null) {
           final chatData = data['chat'];
+
+          print("dhbvdjbjdbvjdbj $chatData");
           _chatId =
               chatData['id']?.toString() ?? chatData['chat_id']?.toString();
 
