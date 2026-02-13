@@ -244,6 +244,7 @@ class _UserChatScreenState extends State<UserChatScreen>
 
       if (success) {
         // ✅ SCROLL TO BOTTOM AFTER SENDING
+        // _scrollToBottom();
         _scrollToBottom();
       } else {
         if (mounted) {

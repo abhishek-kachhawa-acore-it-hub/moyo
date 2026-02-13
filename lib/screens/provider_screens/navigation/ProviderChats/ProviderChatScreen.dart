@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../../../../constants/colorConstant/color_constant.dart';
@@ -67,8 +68,27 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeChat();
     });
+    loadchat();
   }
 
+
+  Future<void> loadchat () async {
+    final pref = await SharedPreferences.getInstance();
+
+    var dbjdfd =  await pref.setBool("providerIdsss", true);
+
+    print("dnfbdfbjdbf $dbjdfd");
+  }
+
+  Future<void> loadchatddd () async {
+    final pref = await SharedPreferences.getInstance();
+    await pref.setBool("providerIdsss", false);
+
+    bool? value = pref.getBool("providerIdsss");
+
+    print("Stored value: $value");
+
+  }
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
@@ -76,9 +96,13 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
     if (state == AppLifecycleState.resumed) {
       // ✅ Screen is active again
       _startPolling();
+      loadchat();
     } else if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
       // ✅ Screen is inactive
       _stopPolling();
+      loadchatddd();
+
+
     }
   }
 
@@ -287,62 +311,87 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
     });
   }
 
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _stopPolling(); // ✅ Stop polling when screen is closed
+    _stopPolling();
+    loadchatddd(); // safety backup
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
+
+  // @override
+  // void dispose() {
+  //   WidgetsBinding.instance.removeObserver(this);
+  //   _stopPolling(); // ✅ Stop polling when screen is closed
+  //   _messageController.dispose();
+  //   _scrollController.dispose();
+  //   _focusNode.dispose();
+  //   loadchatddd();
+  //   print("fvbfjbvjf");
+  //   super.dispose();
+  // }
+
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ColorConstant.scaffoldGray,
-      appBar: _buildAppBar(),
-      resizeToAvoidBottomInset: true,
-      body: SafeArea(
-        child: Consumer<ProviderChatProvider>(
-          builder: (context, chatProvider, child) {
-            // ✅ Auto-scroll when new messages arrive
-            if (chatProvider.messages.isNotEmpty && _chatInitialized) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _scrollToBottom();
-              });
-            }
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) async {
+        if (didPop) {
+          await loadchatddd();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: ColorConstant.scaffoldGray,
+        appBar: _buildAppBar(),
+        resizeToAvoidBottomInset: true,
+        body: SafeArea(
+          child: Consumer<ProviderChatProvider>(
+            builder: (context, chatProvider, child) {
+              // ✅ Auto-scroll when new messages arrive
+              if (chatProvider.messages.isNotEmpty && _chatInitialized) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  // _scrollToBottom();
+                });
+              }
 
-            if (chatProvider.isLoading && !_chatInitialized) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: ColorConstant.moyoOrange),
-                    SizedBox(height: 16.h),
-                    Text(
-                      'Loading chat...',
-                      style: GoogleFonts.roboto(
-                        fontSize: 14.sp,
-                        color: Color(0xFF7A7A7A),
+              if (chatProvider.isLoading && !_chatInitialized) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      CircularProgressIndicator(color: ColorConstant.moyoOrange),
+                      SizedBox(height: 16.h),
+                      Text(
+                        'Loading chat...',
+                        style: GoogleFonts.roboto(
+                          fontSize: 14.sp,
+                          color: Color(0xFF7A7A7A),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
-            }
+                    ],
+                  ),
+                );
+              }
 
-            return Column(
-              children: [
-                Expanded(
-                  child: chatProvider.messages.isEmpty
-                      ? _buildEmptyState()
-                      : _buildMessagesList(chatProvider),
-                ),
-                _buildMessageInput(),
-              ],
-            );
-          },
+              return Column(
+                children: [
+                  Expanded(
+                    child: chatProvider.messages.isEmpty
+                        ? _buildEmptyState()
+                        : _buildMessagesList(chatProvider),
+                  ),
+                  _buildMessageInput(),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -387,7 +436,12 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
       shadowColor: Colors.black.withOpacity(0.1),
       leading: IconButton(
         icon: Icon(Icons.arrow_back, color: Color(0xFF1D1B20)),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () async {
+          await loadchatddd();
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        },
       ),
       title: Row(
         children: [
