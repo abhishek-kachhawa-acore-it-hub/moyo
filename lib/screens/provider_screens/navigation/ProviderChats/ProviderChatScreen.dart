@@ -60,7 +60,7 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
     _focusNode.addListener(() {
       if (_focusNode.hasFocus) {
         Future.delayed(Duration(milliseconds: 600), () {
-          _scrollToBottom();
+          // _scrollToBottom();
         });
       }
     });
@@ -147,7 +147,7 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
         _startPolling();
 
         await Future.delayed(Duration(milliseconds: 300));
-        _scrollToBottom(immediate: true);
+        _scrollToBottom(immediate: false);
       } else {
         if (mounted && chatProvider.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -265,7 +265,7 @@ class _ProviderChatScreenState extends State<ProviderChatScreen> with WidgetsBin
 
       if (success) {
         await Future.delayed(Duration(milliseconds: 100));
-        _scrollToBottom(immediate: true);
+        _scrollToBottom(immediate: false);
       } else {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
