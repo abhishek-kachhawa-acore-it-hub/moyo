@@ -1,4 +1,6 @@
 import 'package:first_flutter/baseControllers/APis.dart';
+import 'package:first_flutter/constants/utils/AppSignatureHelper.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -40,10 +42,16 @@ class LoginProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+
+   
+        final appSignature = await AppSignatureHelper.getAppSignature();
+
+      // "appSignature":"j90XPSjP502" // for debug purpose
+      // "appSignature":"UzsFm/yZctP"  // for release purpose
       final response = await http.post(
         Uri.parse('$base_url/api/auth/send-otp'),
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'mobile': mobile,"appSignature":"j90XPSjP502"
+        body: jsonEncode({'mobile': mobile,'appSignature': appSignature
         }),
       );
 
