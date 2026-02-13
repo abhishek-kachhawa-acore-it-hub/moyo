@@ -67,7 +67,7 @@ import 'screens/commonOnboarding/loginScreen/login_screen.dart';
 import 'screens/commonOnboarding/loginScreen/login_screen_provider.dart';
 import 'screens/commonOnboarding/splashScreen/splash_screen.dart';
 import 'screens/commonOnboarding/splashScreen/splash_screen_provider.dart';
-
+import 'utils/not_found_screen.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // Initialize Firebase for background handling
@@ -304,7 +304,11 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
                 );
               },
             },
-
+            onUnknownRoute: (settings) {
+              return MaterialPageRoute(
+                builder: (_) => NotFoundScreen(routeName: settings.name),
+              );
+            },
             // ✅ Global wrapper for all screens
             builder: (context, child) {
               return ConnectivityOverlay(

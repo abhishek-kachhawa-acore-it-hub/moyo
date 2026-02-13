@@ -421,6 +421,7 @@ class NotificationService {
     if (payload == null || payload.isEmpty) return;
 
     try {
+      print('dhbdjbdjbckdkcdbkd');
       final Map<String, dynamic> data = jsonDecode(payload);
       final context = navigatorKey.currentContext;
 
@@ -639,7 +640,9 @@ class NotificationService {
               data['title'] == 'Provider Available!')) {
         print("📍 [PROVIDER AVAILABLE] Handling notification tap");
       } else if (role == "user") {
+        print('djgbfjbgejdbgkrbdfbgkr');
         _navigateToUserServiceFromNotification(context, serviceId);
+
       }
       //  else if (role == "provider") {
       //   Navigator.of(context)

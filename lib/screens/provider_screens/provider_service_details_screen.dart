@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:first_flutter/constants/colorConstant/color_constant.dart';
+import 'package:first_flutter/screens/provider_screens/provider_custom_bottom_nav.dart';
 import 'package:first_flutter/widgets/user_only_title_appbar.dart';
 import 'package:first_flutter/widgets/user_service_details.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../NATS Service/NatsService.dart';
 import '../../widgets/ProviderConfirmServiceDetails.dart';
+import 'navigation/provider_service_tab_body/provider_bid_service.dart';
 
 class ProviderServiceDetailsScreen extends StatefulWidget {
   final String serviceId;
@@ -286,95 +288,108 @@ class _ProviderServiceDetailsScreenState
   @override
   Widget build(BuildContext context) {
     print(_errorMessage);
-    return Scaffold(
-      backgroundColor: ColorConstant.moyoScaffoldGradient,
-      appBar: UserOnlyTitleAppbar(title: "Service Details"),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _errorMessage != null
-          ? Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.error_outline,
-                size: 64,
-                color: Colors.red,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _errorMessage!,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 16),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    _isLoading = true;
-                    _errorMessage = null;
-                  });
-                  _initializeAndFetchData();
-                },
-                child: const Text('Retry'),
-              ),
-            ],
+    return WillPopScope(
+      onWillPop: () async {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) => ProviderCustomBottomNav(),
           ),
-        ),
-      )
-          : _serviceData == null
-          ? const Center(child: Text('No service data available'))
-          : SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              ProviderConfirmServiceDetails(
-                isProvider: true,
-                category: _serviceData!['category']?.toString() ?? 'N/A',
-                serviceId: _serviceData!['id']?.toString() ?? 'N/A',
-                subCategory:
-                _serviceData!['service']?.toString() ??
-                    _serviceData!['title']?.toString() ??
-                    'N/A',
-                date:
-                _formatDate(_serviceData!['schedule_date']) +
-                    _formatTime(_serviceData!['schedule_time']),
-                pin: _serviceData!['start_otp']?.toString() ?? 'N/A',
-                providerPhone:
-                _serviceData!['user']?['mobile']?.toString() ?? 'N/A',
-                dp:
-                _serviceData!['user']?['image']?.toString() ??
-                    'https://picsum.photos/200/200',
-                name:
-                '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
-                    .trim()
-                    .isEmpty
-                    ? 'N/A'
-                    : '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
-                    .trim(),
-                rating: "4.5",
-                // Rating not in response, using default
-                status: _serviceData!['status']?.toString() ?? 'pending',
-                durationType: _getDurationType(
-                  _serviceData!['service_mode']?.toString(),
+              (route) => false,
+        );
+
+        return false; // prevent default pop
+      },
+      child: Scaffold(
+        backgroundColor: ColorConstant.moyoScaffoldGradient,
+        appBar: UserOnlyTitleAppbar(title: "Service Details"),
+        body: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _errorMessage != null
+            ? Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 64,
+                  color: Colors.red,
                 ),
-                duration: _formatDuration(_serviceData!),
-                price:
-                _serviceData!['budget']?.toString() ??
-                    _serviceData!['bid']?['amount']?.toString() ??
-                    '0',
-                address: _serviceData!['location']?.toString() ?? 'N/A',
-                particular: _buildParticulars(_serviceData!),
-                description:
-                _serviceData!['description']?.toString() ?? 'N/A',
-                user_id: '',
-              ),
-            ],
+                const SizedBox(height: 16),
+                Text(
+                  _errorMessage!,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      _isLoading = true;
+                      _errorMessage = null;
+                    });
+                    _initializeAndFetchData();
+                  },
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          ),
+        )
+            : _serviceData == null
+            ? const Center(child: Text('No service data available'))
+            : SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                ProviderConfirmServiceDetails(
+                  isProvider: true,
+                  category: _serviceData!['category']?.toString() ?? 'N/A',
+                  serviceId: _serviceData!['id']?.toString() ?? 'N/A',
+                  subCategory:
+                  _serviceData!['service']?.toString() ??
+                      _serviceData!['title']?.toString() ??
+                      'N/A',
+                  date:
+                  _formatDate(_serviceData!['schedule_date']) +
+                      _formatTime(_serviceData!['schedule_time']),
+                  pin: _serviceData!['start_otp']?.toString() ?? 'N/A',
+                  providerPhone:
+                  _serviceData!['user']?['mobile']?.toString() ?? 'N/A',
+                  dp:
+                  _serviceData!['user']?['image']?.toString() ??
+                      'https://picsum.photos/200/200',
+                  name:
+                  '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
+                      .trim()
+                      .isEmpty
+                      ? 'N/A'
+                      : '${_serviceData!['user']?['firstname']?.toString() ?? ''} ${_serviceData!['user']?['lastname']?.toString() ?? ''}'
+                      .trim(),
+                  rating: "4.5",
+                  // Rating not in response, using default
+                  status: _serviceData!['status']?.toString() ?? 'pending',
+                  durationType: _getDurationType(
+                    _serviceData!['service_mode']?.toString(),
+                  ),
+                  duration: _formatDuration(_serviceData!),
+                  price:
+                  _serviceData!['budget']?.toString() ??
+                      _serviceData!['bid']?['amount']?.toString() ??
+                      '0',
+                  address: _serviceData!['location']?.toString() ?? 'N/A',
+                  particular: _buildParticulars(_serviceData!),
+                  description:
+                  _serviceData!['description']?.toString() ?? 'N/A',
+                  user_id: '',
+                ),
+              ],
+            ),
           ),
         ),
       ),
