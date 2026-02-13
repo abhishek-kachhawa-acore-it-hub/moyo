@@ -573,11 +573,9 @@ class NotificationService {
       print("   User: $userName");
       print("   Service ID: $serviceId");
 
-      final prefs = await SharedPreferences.getInstance();
 
-      final provID = prefs.getInt('provider_id');
 
-      print("abhsiehk bhai provideri ID : $provID");
+   
 
       Navigator.of(context)
           .push(
@@ -589,7 +587,7 @@ class NotificationService {
                 isOnline: true,
                 userPhone: null,
                 serviceId: serviceId,
-                providerId: provID.toString(),
+                providerId: userId,
               ),
             ),
           )

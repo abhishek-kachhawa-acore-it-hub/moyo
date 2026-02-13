@@ -1,11 +1,808 @@
+// import 'dart:io';
+// import 'package:cached_network_image/cached_network_image.dart';
+// import 'package:first_flutter/constants/colorConstant/color_constant.dart';
+// import 'package:first_flutter/screens/Skills/MySkillProvider.dart';
+// import 'package:flutter/material.dart';
+// import 'package:google_fonts/google_fonts.dart';
+// import 'package:provider/provider.dart';
+// import 'package:file_picker/file_picker.dart';
+// import 'dart:async';
+
+// import 'SubcategoryProvider.dart';
+// import 'SkillProvider.dart';
+
+// class SelectFromHomeScreen extends StatefulWidget {
+//   final int categoryId;
+//   final String categoryName;
+//   final String? categoryIcon;
+
+//   const SelectFromHomeScreen({
+//     super.key,
+//     required this.categoryId,
+//     required this.categoryName,
+//     this.categoryIcon,
+//   });
+
+//   @override
+//   State<SelectFromHomeScreen> createState() => _SelectFromHomeScreenState();
+// }
+
+// class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
+//   Map<int, bool> selectedSubcategories = {};
+//   Map<int, String> experienceYears = {};
+//   Map<int, File?> attachments = {};
+//   int? expandedCardIndex;
+
+//   static const int maxFileSizeBytes = 5 * 1024 * 1024;
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     WidgetsBinding.instance.addPostFrameCallback((_) {
+//       context.read<SubcategoryProvider>().fetchSubcategories(widget.categoryId);
+//     });
+//   }
+
+//   Future<void> _pickFile(int index) async {
+//     try {
+//       FilePickerResult? result = await FilePicker.platform.pickFiles(
+//         type: FileType.custom,
+//         allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+//       );
+
+//       if (result != null) {
+//         final file = File(result.files.single.path!);
+//         final fileSize = await file.length();
+
+//         if (fileSize > maxFileSizeBytes) {
+//           if (!mounted) return;
+//           ScaffoldMessenger.of(context).showSnackBar(
+//             SnackBar(
+//               content: Text(
+//                 'File size exceeds 5MB limit. Please select a smaller file.',
+//               ),
+//               backgroundColor: Colors.red,
+//             ),
+//           );
+//           return;
+//         }
+
+//         setState(() {
+//           attachments[index] = file;
+//         });
+//       }
+//     } catch (e) {
+//       if (!mounted) return;
+//       ScaffoldMessenger.of(
+//         context,
+//       ).showSnackBar(SnackBar(content: Text('Error picking file: $e')));
+//     }
+//   }
+
+//   String _getFileName(File? file) {
+//     if (file == null) return '';
+//     return file.path.split('/').last;
+//   }
+
+//   String _getFileSize(File? file) {
+//     if (file == null) return '';
+//     final bytes = file.lengthSync();
+//     if (bytes < 1024) return '$bytes B';
+//     if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+//     final isNearLimit = bytes > (maxFileSizeBytes * 0.9);
+//     final sizeText = '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+//     return isNearLimit ? '⚠️ $sizeText (Max: 5MB)' : sizeText;
+//   }
+
+//   Future<void> _showUncheckDialog(int skillId, String skillName) async {
+//     return showDialog(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(16),
+//           ),
+//           title: Row(
+//             children: [
+//               Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+//               SizedBox(width: 12),
+//               Expanded(
+//                 child: Text(
+//                   'Uncheck Skill?',
+//                   style: GoogleFonts.roboto(
+//                     fontSize: 20,
+//                     fontWeight: FontWeight.w600,
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           content: Text(
+//             'Are you sure you want to uncheck "$skillName"? This will mark it as not selected.',
+//             style: GoogleFonts.roboto(fontSize: 16, color: Colors.grey[700]),
+//           ),
+//           actions: [
+//             TextButton(
+//               onPressed: () => Navigator.of(context).pop(),
+//               child: Text(
+//                 'Cancel',
+//                 style: GoogleFonts.roboto(
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.w600,
+//                   color: Colors.grey[600],
+//                 ),
+//               ),
+//             ),
+//             ElevatedButton(
+//               onPressed: () async {
+//                 Navigator.of(context).pop();
+//                 await _uncheckSkill(skillId, skillName);
+//               },
+//               style: ElevatedButton.styleFrom(
+//                 backgroundColor: ColorConstant.moyoOrange,
+//                 foregroundColor: Colors.white,
+//                 shape: RoundedRectangleBorder(
+//                   borderRadius: BorderRadius.circular(8),
+//                 ),
+//                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//               ),
+//               child: Text(
+//                 'Continue',
+//                 style: GoogleFonts.roboto(
+//                   fontSize: 16,
+//                   fontWeight: FontWeight.w600,
+//                 ),
+//               ),
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+
+//   Future<void> _uncheckSkill(int skillId, String skillName) async {
+//     final subcategoryProvider = context.read<SubcategoryProvider>();
+//     final result = await subcategoryProvider.uncheckSkill(skillId);
+
+//     if (!mounted) return;
+
+//     if (result) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('$skillName unchecked successfully!'),
+//           backgroundColor: Colors.green,
+//         ),
+//       );
+//     } else {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(
+//             subcategoryProvider.errorMessage ?? 'Failed to uncheck skill',
+//           ),
+//           backgroundColor: Colors.red,
+//         ),
+//       );
+//     }
+//   }
+
+//   Future<void> _submitSkill(int index, dynamic subcategory) async {
+//     if (!selectedSubcategories[index]!) return;
+
+//     final mySkillProvider = context.read<MySkillProvider>();
+
+//   // ←←← Yeh check sabse pehle
+//   if (!mySkillProvider.canAddMoreSkills) {
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       SnackBar(
+//         content: Text(mySkillProvider.maxSkillMessage),
+//         backgroundColor: Colors.orange[800],
+//         duration: Duration(seconds: 4),
+//       ),
+//     );
+//     return;
+//   }
+
+//     final experience = experienceYears[index];
+//     if (experience == null || experience.isEmpty) {
+//       if (!mounted) return;
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Please enter years of experience'),
+//           backgroundColor: Colors.red,
+//         ),
+//       );
+//       return;
+//     }
+
+//     final attachment = attachments[index];
+//     if (attachment != null) {
+//       final fileSize = attachment.lengthSync();
+//       if (fileSize > maxFileSizeBytes) {
+//         if (!mounted) return;
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           SnackBar(
+//             content: Text(
+//               'File size exceeds 5MB limit. Please select a smaller file.',
+//             ),
+//             backgroundColor: Colors.red,
+//           ),
+//         );
+//         return;
+//       }
+//     }
+
+//     final skillProvider = context.read<SkillProvider>();
+
+//     final result = await skillProvider.addSkill(
+//       skillName: subcategory.name,
+//       serviceName: widget.categoryName,
+//       experience: experience,
+//       proofDocument: attachment,
+//     );
+
+//     if (!mounted) return;
+
+//     if (result != null) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text('Skill added successfully!'),
+//           backgroundColor: Colors.green,
+//         ),
+//       );
+//       setState(() {
+//         selectedSubcategories[index] = false;
+//         experienceYears[index] = "";
+//         attachments[index] = null;
+//         expandedCardIndex = null;
+//       });
+//     } else if (skillProvider.errorMessage != null) {
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(
+//           content: Text(skillProvider.errorMessage!),
+//           backgroundColor: Colors.red,
+//         ),
+//       );
+//     }
+//   }
+
+//   Widget _buildSiteSection(
+//     String title,
+//     List<dynamic>? sites,
+//     SubcategoryProvider provider,
+//   ) {
+//     if (sites == null || sites.isEmpty) return SizedBox.shrink();
+
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         SizedBox(height: 16),
+//         Text(
+//           title,
+//           style: GoogleFonts.roboto(
+//             fontSize: 16,
+//             fontWeight: FontWeight.w600,
+//             color: ColorConstant.black,
+//           ),
+//         ),
+//         SizedBox(height: 12),
+//         Wrap(
+//           spacing: 12,
+//           runSpacing: 12,
+//           children: sites.map((site) {
+//             return Container(
+//               padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+//               decoration: BoxDecoration(
+//                 color: Colors.white,
+//                 borderRadius: BorderRadius.circular(8),
+//                 border: Border.all(color: ColorConstant.moyoOrange),
+//               ),
+//               child: Row(
+//                 mainAxisSize: MainAxisSize.min,
+//                 children: [
+//                   if (site.image != null && site.image!.isNotEmpty)
+//                     Container(
+//                       width: 24,
+//                       height: 24,
+//                       margin: EdgeInsets.only(right: 8),
+//                       decoration: BoxDecoration(
+//                         borderRadius: BorderRadius.circular(4),
+//                       ),
+//                       child: ClipRRect(
+//                         borderRadius: BorderRadius.circular(4),
+//                         child: CachedNetworkImage(
+//                           imageUrl: provider.getFullImageUrl(site.image),
+//                           fit: BoxFit.cover,
+//                           placeholder: (context, url) => Icon(
+//                             Icons.image,
+//                             size: 16,
+//                             color: ColorConstant.moyoOrange,
+//                           ),
+//                           errorWidget: (context, url, error) => Icon(
+//                             Icons.image,
+//                             size: 16,
+//                             color: ColorConstant.moyoOrange,
+//                           ),
+//                         ),
+//                       ),
+//                     ),
+//                   Text(
+//                     site.name,
+//                     style: GoogleFonts.roboto(
+//                       fontSize: 14,
+//                       fontWeight: FontWeight.w500,
+//                       color: ColorConstant.black,
+//                     ),
+//                   ),
+//                 ],
+//               ),
+//             );
+//           }).toList(),
+//         ),
+//       ],
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       backgroundColor: ColorConstant.scaffoldGray,
+//       appBar: AppBar(
+//         backgroundColor: ColorConstant.moyoOrange,
+//         elevation: 0,
+//         leading: IconButton(
+//           icon: Icon(Icons.arrow_back, color: Colors.white),
+//           onPressed: () => Navigator.pop(context),
+//         ),
+//         title: Text(
+//           'Select from ${widget.categoryName}',
+//           style: GoogleFonts.roboto(
+//             color: Colors.white,
+//             fontWeight: FontWeight.w600,
+//             fontSize: 20,
+//           ),
+//         ),
+//       ),
+//       body: Consumer2<SubcategoryProvider, SkillProvider>(
+//         builder: (context, subcategoryProvider, skillProvider, child) {
+//           if (subcategoryProvider.isLoading) {
+//             return Center(
+//               child: CircularProgressIndicator(color: ColorConstant.moyoOrange),
+//             );
+//           }
+
+//           if (subcategoryProvider.errorMessage != null) {
+//             return Center(
+//               child: Padding(
+//                 padding: const EdgeInsets.all(24.0),
+//                 child: Column(
+//                   mainAxisAlignment: MainAxisAlignment.center,
+//                   children: [
+//                     Icon(Icons.error_outline, color: Colors.red, size: 64),
+//                     SizedBox(height: 16),
+//                     Text(
+//                       subcategoryProvider.errorMessage ?? 'An error occurred',
+//                       textAlign: TextAlign.center,
+//                       style: GoogleFonts.roboto(fontSize: 16),
+//                     ),
+//                     SizedBox(height: 24),
+//                     ElevatedButton.icon(
+//                       onPressed: () {
+//                         subcategoryProvider.fetchSubcategories(
+//                           widget.categoryId,
+//                         );
+//                       },
+//                       icon: Icon(Icons.refresh),
+//                       label: Text('Retry'),
+//                       style: ElevatedButton.styleFrom(
+//                         backgroundColor: ColorConstant.moyoOrange,
+//                         foregroundColor: Colors.white,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             );
+//           }
+
+//           if (subcategoryProvider.subcategories.isEmpty) {
+//             return Center(
+//               child: Text(
+//                 'No subcategories available',
+//                 style: GoogleFonts.roboto(fontSize: 16),
+//               ),
+//             );
+//           }
+
+//           return ListView.builder(
+//             padding: EdgeInsets.all(16),
+//             itemCount: subcategoryProvider.subcategories.length,
+//             itemBuilder: (context, index) {
+//               final subcategory = subcategoryProvider.subcategories[index];
+//               final isSelected = selectedSubcategories[index] ?? false;
+//               final isExpanded = expandedCardIndex == index;
+//               final isAlreadyChecked = subcategory.isSubcategory;
+
+//               return Padding(
+//                 padding: const EdgeInsets.only(bottom: 16),
+//                 child: Container(
+//                   decoration: BoxDecoration(
+//                     color: Colors.white,
+//                     borderRadius: BorderRadius.circular(12),
+//                     boxShadow: [
+//                       BoxShadow(
+//                         color: Colors.black.withOpacity(0.08),
+//                         blurRadius: 10,
+//                         offset: Offset(0, 2),
+//                       ),
+//                     ],
+//                   ),
+//                   child: Column(
+//                     children: [
+//                       InkWell(
+//                         onTap: isAlreadyChecked
+//                             ? null
+//                             : () {
+//                                 setState(() {
+//                                   if (isSelected && isExpanded) {
+//                                     expandedCardIndex = null;
+//                                   } else if (isSelected && !isExpanded) {
+//                                     expandedCardIndex = index;
+//                                   } else {
+//                                     selectedSubcategories[index] = true;
+//                                     expandedCardIndex = index;
+//                                   }
+//                                 });
+//                               },
+//                         child: Padding(
+//                           padding: const EdgeInsets.all(16),
+//                           child: Row(
+//                             children: [
+//                               Container(
+//                                 width: 50,
+//                                 height: 50,
+//                                 decoration: BoxDecoration(
+//                                   color: Color(0xFFFFF4E6),
+//                                   borderRadius: BorderRadius.circular(10),
+//                                 ),
+//                                 child: ClipRRect(
+//                                   borderRadius: BorderRadius.circular(10),
+//                                   child:
+//                                       subcategory.icon != null &&
+//                                           subcategory.icon!.isNotEmpty
+//                                       ? CachedNetworkImage(
+//                                           imageUrl: context
+//                                               .read<SubcategoryProvider>()
+//                                               .getFullImageUrl(
+//                                                 subcategory.icon,
+//                                               ),
+//                                           fit: BoxFit.cover,
+//                                           placeholder: (context, url) => Icon(
+//                                             Icons.restaurant,
+//                                             color: ColorConstant.moyoOrange,
+//                                             size: 30,
+//                                           ),
+//                                           errorWidget: (context, url, error) =>
+//                                               Icon(
+//                                                 Icons.restaurant,
+//                                                 color: ColorConstant.moyoOrange,
+//                                                 size: 30,
+//                                               ),
+//                                         )
+//                                       : Icon(
+//                                           Icons.restaurant,
+//                                           color: ColorConstant.moyoOrange,
+//                                           size: 30,
+//                                         ),
+//                                 ),
+//                               ),
+//                               SizedBox(width: 16),
+//                               Expanded(
+//                                 child: Text(
+//                                   subcategory.name,
+//                                   style: GoogleFonts.roboto(
+//                                     fontSize: 18,
+//                                     fontWeight: FontWeight.w600,
+//                                     color: ColorConstant.black,
+//                                   ),
+//                                 ),
+//                               ),
+//                               GestureDetector(
+//                                 onTap: isAlreadyChecked
+//                                     ? () {
+//                                         _showUncheckDialog(
+//                                           subcategory.id,
+//                                           subcategory.name,
+//                                         );
+//                                       }
+//                                     : () {
+//                                         setState(() {
+//                                           selectedSubcategories[index] =
+//                                               !isSelected;
+//                                           if (!isSelected) {
+//                                             expandedCardIndex = index;
+//                                           } else {
+//                                             expandedCardIndex = null;
+//                                             experienceYears[index] = "";
+//                                             attachments[index] = null;
+//                                           }
+//                                         });
+//                                       },
+//                                 child: Container(
+//                                   width: 28,
+//                                   height: 28,
+//                                   decoration: BoxDecoration(
+//                                     color: isAlreadyChecked
+//                                         ? Colors.green
+//                                         : isSelected
+//                                         ? ColorConstant.moyoOrange
+//                                         : Colors.white,
+//                                     border: Border.all(
+//                                       color: isAlreadyChecked
+//                                           ? Colors.green
+//                                           : isSelected
+//                                           ? ColorConstant.moyoOrange
+//                                           : Colors.grey[400]!,
+//                                       width: 2,
+//                                     ),
+//                                     borderRadius: BorderRadius.circular(6),
+//                                   ),
+//                                   child: (isAlreadyChecked || isSelected)
+//                                       ? Icon(
+//                                           Icons.check,
+//                                           color: Colors.white,
+//                                           size: 20,
+//                                         )
+//                                       : null,
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ),
+//                       if (isExpanded)
+//                         Padding(
+//                           padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+//                           child: Column(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Divider(height: 1),
+//                               SizedBox(height: 16),
+//                               Text(
+//                                 'Year Of Experience',
+//                                 style: GoogleFonts.roboto(
+//                                   fontSize: 14,
+//                                   color: Colors.grey[700],
+//                                   fontWeight: FontWeight.w500,
+//                                 ),
+//                               ),
+//                               SizedBox(height: 8),
+//                               Container(
+//                                 decoration: BoxDecoration(
+//                                   color: Colors.grey[50],
+//                                   borderRadius: BorderRadius.circular(10),
+//                                   border: Border.all(color: Colors.grey[300]!),
+//                                 ),
+//                                 child: Row(
+//                                   children: [
+//                                     Container(
+//                                       padding: EdgeInsets.all(12),
+//                                       child: Icon(
+//                                         Icons.work_outline,
+//                                         color: Colors.grey[700],
+//                                         size: 24,
+//                                       ),
+//                                     ),
+//                                     Expanded(
+//                                       child: TextField(
+//                                         keyboardType: TextInputType.number,
+//                                         decoration: InputDecoration(
+//                                           border: InputBorder.none,
+//                                           hintText: '0',
+//                                           hintStyle: GoogleFonts.roboto(
+//                                             fontSize: 18,
+//                                             color: Colors.grey[400],
+//                                           ),
+//                                         ),
+//                                         style: GoogleFonts.roboto(
+//                                           fontSize: 18,
+//                                           fontWeight: FontWeight.w600,
+//                                         ),
+//                                         onChanged: (value) {
+//                                           experienceYears[index] = value;
+//                                         },
+//                                       ),
+//                                     ),
+//                                   ],
+//                                 ),
+//                               ),
+//                               SizedBox(height: 16),
+//                               InkWell(
+//                                 onTap: () => _pickFile(index),
+//                                 child: Container(
+//                                   padding: EdgeInsets.symmetric(vertical: 8),
+//                                   decoration: BoxDecoration(
+//                                     color: Colors.white,
+//                                     borderRadius: BorderRadius.circular(10),
+//                                     border: Border.all(
+//                                       color: Colors.grey[300]!,
+//                                       width: 1.5,
+//                                     ),
+//                                   ),
+//                                   child: Row(
+//                                     mainAxisAlignment: MainAxisAlignment.center,
+//                                     children: [
+//                                       Icon(
+//                                         Icons.attach_file,
+//                                         color: ColorConstant.black,
+//                                         size: 24,
+//                                       ),
+//                                       SizedBox(width: 8),
+//                                       Column(
+//                                         mainAxisSize: MainAxisSize.min,
+//                                         crossAxisAlignment:
+//                                             CrossAxisAlignment.start,
+//                                         children: [
+//                                           Text(
+//                                             'Add Attachment',
+//                                             style: GoogleFonts.roboto(
+//                                               fontSize: 16,
+//                                               fontWeight: FontWeight.w600,
+//                                               color: ColorConstant.black,
+//                                             ),
+//                                           ),
+//                                           Text(
+//                                             'PDF, PNG, JPG, JPEG • Max 5MB',
+//                                             style: GoogleFonts.roboto(
+//                                               fontSize: 12,
+//                                               color: Colors.grey[600],
+//                                               fontWeight: FontWeight.w500,
+//                                             ),
+//                                           ),
+//                                         ],
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                               ),
+//                               if (attachments[index] != null) ...[
+//                                 SizedBox(height: 12),
+//                                 Container(
+//                                   padding: EdgeInsets.all(12),
+//                                   decoration: BoxDecoration(
+//                                     color: Color(0xFFFFF4E6),
+//                                     borderRadius: BorderRadius.circular(10),
+//                                   ),
+//                                   child: Row(
+//                                     children: [
+//                                       Container(
+//                                         padding: EdgeInsets.all(8),
+//                                         decoration: BoxDecoration(
+//                                           color: ColorConstant.moyoOrange,
+//                                           borderRadius: BorderRadius.circular(
+//                                             8,
+//                                           ),
+//                                         ),
+//                                         child: Icon(
+//                                           Icons.description,
+//                                           color: Colors.white,
+//                                           size: 24,
+//                                         ),
+//                                       ),
+//                                       SizedBox(width: 12),
+//                                       Expanded(
+//                                         child: Column(
+//                                           crossAxisAlignment:
+//                                               CrossAxisAlignment.start,
+//                                           children: [
+//                                             Text(
+//                                               _getFileName(attachments[index]),
+//                                               style: GoogleFonts.roboto(
+//                                                 fontSize: 14,
+//                                                 fontWeight: FontWeight.w600,
+//                                               ),
+//                                               maxLines: 1,
+//                                               overflow: TextOverflow.ellipsis,
+//                                             ),
+//                                             Text(
+//                                               _getFileSize(attachments[index]),
+//                                               style: GoogleFonts.roboto(
+//                                                 fontSize: 12,
+//                                                 color: Colors.grey[600],
+//                                               ),
+//                                             ),
+//                                           ],
+//                                         ),
+//                                       ),
+//                                       IconButton(
+//                                         icon: Icon(
+//                                           Icons.delete_outline,
+//                                           color: Colors.grey[600],
+//                                         ),
+//                                         onPressed: () {
+//                                           setState(() {
+//                                             attachments[index] = null;
+//                                           });
+//                                         },
+//                                       ),
+//                                     ],
+//                                   ),
+//                                 ),
+//                               ],
+
+//                               // ✅ Display Explicit Sites
+//                               _buildSiteSection(
+//                                 'Provider brings',
+//                                 subcategory.explicitSite,
+//                                 subcategoryProvider,
+//                               ),
+
+//                               // ✅ Display Implicit Sites
+//                               _buildSiteSection(
+//                                 'Customer Provides',
+//                                 subcategory.implicitSite,
+//                                 subcategoryProvider,
+//                               ),
+
+//                               SizedBox(height: 16),
+//                               SizedBox(
+//                                 width: double.infinity,
+//                                 child: ElevatedButton(
+//                                   onPressed: skillProvider.isLoading
+//                                       ? null
+//                                       : () => _submitSkill(index, subcategory),
+//                                   style: ElevatedButton.styleFrom(
+//                                     backgroundColor: ColorConstant.moyoOrange,
+//                                     foregroundColor: Colors.white,
+//                                     padding: EdgeInsets.symmetric(vertical: 16),
+//                                     shape: RoundedRectangleBorder(
+//                                       borderRadius: BorderRadius.circular(10),
+//                                     ),
+//                                     elevation: 0,
+//                                   ),
+//                                   child: skillProvider.isLoading
+//                                       ? SizedBox(
+//                                           height: 20,
+//                                           width: 20,
+//                                           child: CircularProgressIndicator(
+//                                             strokeWidth: 2,
+//                                             valueColor:
+//                                                 AlwaysStoppedAnimation<Color>(
+//                                                   Colors.white,
+//                                                 ),
+//                                           ),
+//                                         )
+//                                       : Text(
+//                                           'Submit',
+//                                           style: GoogleFonts.roboto(
+//                                             fontSize: 18,
+//                                             fontWeight: FontWeight.w600,
+//                                           ),
+//                                         ),
+//                                 ),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                     ],
+//                   ),
+//                 ),
+//               );
+//             },
+//           );
+//         },
+//       ),
+//     );
+//   }
+// }
+
 import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_flutter/constants/colorConstant/color_constant.dart';
+import 'package:first_flutter/screens/Skills/MySkillProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:async';
 
 import 'SubcategoryProvider.dart';
 import 'SkillProvider.dart';
@@ -39,6 +836,7 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SubcategoryProvider>().fetchSubcategories(widget.categoryId);
+      Provider.of<MySkillProvider>(context, listen: false).fetchSkills();
     });
   }
 
@@ -159,13 +957,39 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
     );
   }
 
+  // Future<void> _uncheckSkill(int skillId, String skillName) async {
+  //   final subcategoryProvider = context.read<SubcategoryProvider>();
+  //   final result = await subcategoryProvider.uncheckSkill(skillId);
+
+  //   if (!mounted) return;
+
+  //   if (result) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('$skillName unchecked successfully!'), backgroundColor: Colors.green),
+  //     );
+  //   } else {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(subcategoryProvider.errorMessage ?? 'Failed to uncheck skill'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
+
   Future<void> _uncheckSkill(int skillId, String skillName) async {
     final subcategoryProvider = context.read<SubcategoryProvider>();
+    final mySkillProvider = context
+        .read<MySkillProvider>(); // ← pehle hi read kar lo
+
     final result = await subcategoryProvider.uncheckSkill(skillId);
 
     if (!mounted) return;
 
     if (result) {
+      // Success → ab skills list refresh karo
+      await mySkillProvider.fetchSkills();
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('$skillName unchecked successfully!'),
@@ -184,14 +1008,156 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
     }
   }
 
+  // Future<void> _submitSkill(int index, dynamic subcategory) async {
+  //   if (!selectedSubcategories[index]!) return;
+
+  //   final mySkillProvider = context.read<MySkillProvider>();
+
+  //   // Check max skills limit
+  //   if (!mySkillProvider.canAddMoreSkills) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(mySkillProvider.maxSkillMessage),
+  //         backgroundColor: Colors.orange[800],
+  //         duration: Duration(seconds: 4),
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   final experience = experienceYears[index];
+  //   if (experience == null || experience.isEmpty) {
+  //     if (!mounted) return;
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Please enter years of experience'), backgroundColor: Colors.red),
+  //     );
+  //     return;
+  //   }
+
+  //   final attachment = attachments[index];
+  //   if (attachment != null) {
+  //     final fileSize = attachment.lengthSync();
+  //     if (fileSize > maxFileSizeBytes) {
+  //       if (!mounted) return;
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('File size exceeds 5MB limit. Please select a smaller file.'), backgroundColor: Colors.red),
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   final skillProvider = context.read<SkillProvider>();
+
+  //   final result = await skillProvider.addSkill(
+  //     skillName: subcategory.name,
+  //     serviceName: widget.categoryName,
+  //     experience: experience,
+  //     proofDocument: attachment,
+  //   );
+
+  //   if (!mounted) return;
+
+  //   if (result != null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Skill added successfully!'), backgroundColor: Colors.green),
+  //     );
+  //     setState(() {
+  //       selectedSubcategories[index] = false;
+  //       experienceYears[index] = "";
+  //       attachments[index] = null;
+  //       expandedCardIndex = null;
+  //     });
+  //   } else if (skillProvider.errorMessage != null) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(skillProvider.errorMessage!), backgroundColor: Colors.red),
+  //     );
+  //   }
+  // }
+
+  //   Future<void> _submitSkill(int index, dynamic subcategory) async {
+  //   if (!selectedSubcategories[index]!) return;
+
+  //   final mySkillProvider = context.read<MySkillProvider>();
+
+  //   if (!mySkillProvider.canAddMoreSkills) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(mySkillProvider.maxSkillMessage),
+  //         backgroundColor: Colors.orange[800],
+  //         duration: const Duration(seconds: 4),
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   final experience = experienceYears[index];
+  //   if (experience == null || experience.trim().isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Please enter years of experience'), backgroundColor: Colors.red),
+  //     );
+  //     return;
+  //   }
+
+  //   final attachment = attachments[index];
+  //   if (attachment != null && attachment.lengthSync() > maxFileSizeBytes) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('File size exceeds 5MB limit.'), backgroundColor: Colors.red),
+  //     );
+  //     return;
+  //   }
+
+  //   final success = await mySkillProvider.addSkill(
+  //     skillName: subcategory.name,
+  //     serviceName: widget.categoryName,
+  //     experience: experience,
+  //     proofDocument: attachment,
+  //   );
+
+  //   if (!mounted) return;
+
+  //   if (success) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(content: Text('Skill added successfully!'), backgroundColor: Colors.green),
+  //     );
+
+  //     setState(() {
+  //       selectedSubcategories[index] = false;
+  //       experienceYears[index] = "";
+  //       attachments[index] = null;
+  //       expandedCardIndex = null;
+  //     });
+
+  //     // Optional: close expanded card if you want
+  //     // expandedCardIndex = null;
+  //   } else {
+  //     final msg = mySkillProvider.errorMessage ?? 'Failed to add skill';
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text(msg), backgroundColor: Colors.red),
+  //     );
+  //   }
+  // }
+
   Future<void> _submitSkill(int index, dynamic subcategory) async {
     if (!selectedSubcategories[index]!) return;
 
-    final experience = experienceYears[index];
-    if (experience == null || experience.isEmpty) {
-      if (!mounted) return;
+    final mySkillProvider = context.read<MySkillProvider>();
+
+    // Pehle se hi limit check + loading state consider karo
+    if (!mySkillProvider.canAddMoreSkills || mySkillProvider.isLoading) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
+          content: Text(mySkillProvider.maxSkillMessage),
+          backgroundColor: Colors.orange[800],
+          duration: const Duration(seconds: 4),
+        ),
+      );
+      return;
+    }
+
+    final experience = experienceYears[index]?.trim() ?? '';
+    if (experience.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
           content: Text('Please enter years of experience'),
           backgroundColor: Colors.red,
         ),
@@ -200,25 +1166,20 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
     }
 
     final attachment = attachments[index];
-    if (attachment != null) {
-      final fileSize = attachment.lengthSync();
-      if (fileSize > maxFileSizeBytes) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'File size exceeds 5MB limit. Please select a smaller file.',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-        return;
-      }
+    if (attachment != null && attachment.lengthSync() > maxFileSizeBytes) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('File size exceeds 5MB limit.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
     }
 
-    final skillProvider = context.read<SkillProvider>();
+    // Disable button visually (loading)
+    // (yeh already skillProvider.isLoading se ho raha tha, lekin ab mySkillProvider use kar rahe ho)
 
-    final result = await skillProvider.addSkill(
+    final success = await mySkillProvider.addSkill(
       skillName: subcategory.name,
       serviceName: widget.categoryName,
       experience: experience,
@@ -227,26 +1188,29 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
 
     if (!mounted) return;
 
-    if (result != null) {
+    if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Skill added successfully!'),
           backgroundColor: Colors.green,
         ),
       );
+
       setState(() {
         selectedSubcategories[index] = false;
         experienceYears[index] = "";
         attachments[index] = null;
-        expandedCardIndex = null;
+        expandedCardIndex = null; // card collapse kar do
       });
-    } else if (skillProvider.errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(skillProvider.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
-      );
+
+      // Important: add ke turant baad fetch karo taaki count sahi ho
+      await mySkillProvider
+          .fetchSkills(); // ← yeh line already addSkill mein hai, lekin double safety ke liye yahan bhi
+    } else {
+      final msg = mySkillProvider.errorMessage ?? 'Failed to add skill';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
     }
   }
 
@@ -255,12 +1219,12 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
     List<dynamic>? sites,
     SubcategoryProvider provider,
   ) {
-    if (sites == null || sites.isEmpty) return SizedBox.shrink();
+    if (sites == null || sites.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Text(
           title,
           style: GoogleFonts.roboto(
@@ -269,13 +1233,13 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
             color: ColorConstant.black,
           ),
         ),
-        SizedBox(height: 12),
+        const SizedBox(height: 12),
         Wrap(
           spacing: 12,
           runSpacing: 12,
           children: sites.map((site) {
             return Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
@@ -288,7 +1252,7 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
                     Container(
                       width: 24,
                       height: 24,
-                      margin: EdgeInsets.only(right: 8),
+                      margin: const EdgeInsets.only(right: 8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -335,7 +1299,7 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
         backgroundColor: ColorConstant.moyoOrange,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -350,7 +1314,7 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
       body: Consumer2<SubcategoryProvider, SkillProvider>(
         builder: (context, subcategoryProvider, skillProvider, child) {
           if (subcategoryProvider.isLoading) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(color: ColorConstant.moyoOrange),
             );
           }
@@ -363,21 +1327,19 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.error_outline, color: Colors.red, size: 64),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       subcategoryProvider.errorMessage ?? 'An error occurred',
                       textAlign: TextAlign.center,
                       style: GoogleFonts.roboto(fontSize: 16),
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: () {
-                        subcategoryProvider.fetchSubcategories(
-                          widget.categoryId,
-                        );
-                      },
-                      icon: Icon(Icons.refresh),
-                      label: Text('Retry'),
+                      onPressed: () => subcategoryProvider.fetchSubcategories(
+                        widget.categoryId,
+                      ),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Retry'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: ColorConstant.moyoOrange,
                         foregroundColor: Colors.white,
@@ -398,381 +1360,573 @@ class _SelectFromHomeScreenState extends State<SelectFromHomeScreen> {
             );
           }
 
-          return ListView.builder(
-            padding: EdgeInsets.all(16),
-            itemCount: subcategoryProvider.subcategories.length,
-            itemBuilder: (context, index) {
-              final subcategory = subcategoryProvider.subcategories[index];
-              final isSelected = selectedSubcategories[index] ?? false;
-              final isExpanded = expandedCardIndex == index;
-              final isAlreadyChecked = subcategory.isSubcategory;
+          return Column(
+            children: [
+              // ── Skills Count Header ────────────────────────────────
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                color: const Color(0xFFFFF8F0), // light orange background
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline_rounded,
+                          color: ColorConstant.moyoOrange,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Skills Added',
+                          style: GoogleFonts.roboto(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: ColorConstant.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Consumer<MySkillProvider>(
+                      builder: (context, mySkillProvider, _) {
+                        final count = mySkillProvider.skillCount;
+                        final isMax = count >= 10;
 
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.08),
-                        blurRadius: 10,
-                        offset: Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      InkWell(
-                        onTap: isAlreadyChecked
-                            ? null
-                            : () {
-                                setState(() {
-                                  if (isSelected && isExpanded) {
-                                    expandedCardIndex = null;
-                                  } else if (isSelected && !isExpanded) {
-                                    expandedCardIndex = index;
-                                  } else {
-                                    selectedSubcategories[index] = true;
-                                    expandedCardIndex = index;
-                                  }
-                                });
-                              },
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: Color(0xFFFFF4E6),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(10),
-                                  child:
-                                      subcategory.icon != null &&
-                                          subcategory.icon!.isNotEmpty
-                                      ? CachedNetworkImage(
-                                          imageUrl: context
-                                              .read<SubcategoryProvider>()
-                                              .getFullImageUrl(
-                                                subcategory.icon,
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isMax
+                                ? Colors.red[50]
+                                : ColorConstant.moyoOrange.withOpacity(0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isMax
+                                  ? Colors.red[300]!
+                                  : ColorConstant.moyoOrange,
+                              width: 1.2,
+                            ),
+                          ),
+                          child:
+                              //  Text(
+                              //   '$count / 10',
+                              //   style: GoogleFonts.roboto(
+                              //     fontSize: 15,
+                              //     fontWeight: FontWeight.w700,
+                              //     color: isMax ? Colors.red[800] : ColorConstant.moyoOrange,
+                              //   ),
+                              // ),
+                              Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '$count / 10',
+                                    style: GoogleFonts.roboto(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: isMax
+                                          ? Colors.red[800]
+                                          : ColorConstant.moyoOrange,
+                                    ),
+                                  ),
+                                  if (mySkillProvider.isLoading)
+                                    Padding(
+                                      padding: const EdgeInsets.only(left: 8),
+                                      child: SizedBox(
+                                        width: 14,
+                                        height: 14,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                ColorConstant.moyoOrange,
                                               ),
-                                          fit: BoxFit.cover,
-                                          placeholder: (context, url) => Icon(
-                                            Icons.restaurant,
-                                            color: ColorConstant.moyoOrange,
-                                            size: 30,
-                                          ),
-                                          errorWidget: (context, url, error) =>
-                                              Icon(
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+
+              // ── Max limit warning when 10 reached ──────────────────
+              Consumer<MySkillProvider>(
+                builder: (context, mySkillProvider, _) {
+                  if (mySkillProvider.skillCount >= 10) {
+                    return Container(
+                      width: double.infinity,
+                      color: Colors.red[50],
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            Icons.info_outline,
+                            color: Colors.red[700],
+                            size: 20,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'You have reached the maximum limit of 10 skills',
+                              style: GoogleFonts.roboto(
+                                color: Colors.red[800],
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+
+              // ── Main List ──────────────────────────────────────────
+              Expanded(
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: subcategoryProvider.subcategories.length,
+                  itemBuilder: (context, index) {
+                    final subcategory =
+                        subcategoryProvider.subcategories[index];
+                    final isSelected = selectedSubcategories[index] ?? false;
+                    final isExpanded = expandedCardIndex == index;
+                    final isAlreadyChecked = subcategory.isSubcategory;
+
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.08),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            InkWell(
+                              onTap: isAlreadyChecked
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        if (isSelected && isExpanded) {
+                                          expandedCardIndex = null;
+                                        } else if (isSelected && !isExpanded) {
+                                          expandedCardIndex = index;
+                                        } else {
+                                          selectedSubcategories[index] = true;
+                                          expandedCardIndex = index;
+                                        }
+                                      });
+                                    },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF4E6),
+                                        borderRadius: BorderRadius.circular(10),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child:
+                                            subcategory.icon != null &&
+                                                subcategory.icon!.isNotEmpty
+                                            ? CachedNetworkImage(
+                                                imageUrl: context
+                                                    .read<SubcategoryProvider>()
+                                                    .getFullImageUrl(
+                                                      subcategory.icon,
+                                                    ),
+                                                fit: BoxFit.cover,
+                                                placeholder: (context, url) =>
+                                                    Icon(
+                                                      Icons.restaurant,
+                                                      color: ColorConstant
+                                                          .moyoOrange,
+                                                      size: 30,
+                                                    ),
+                                                errorWidget:
+                                                    (context, url, error) =>
+                                                        Icon(
+                                                          Icons.restaurant,
+                                                          color: ColorConstant
+                                                              .moyoOrange,
+                                                          size: 30,
+                                                        ),
+                                              )
+                                            : Icon(
                                                 Icons.restaurant,
                                                 color: ColorConstant.moyoOrange,
                                                 size: 30,
                                               ),
-                                        )
-                                      : Icon(
-                                          Icons.restaurant,
-                                          color: ColorConstant.moyoOrange,
-                                          size: 30,
-                                        ),
-                                ),
-                              ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: Text(
-                                  subcategory.name,
-                                  style: GoogleFonts.roboto(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: ColorConstant.black,
-                                  ),
-                                ),
-                              ),
-                              GestureDetector(
-                                onTap: isAlreadyChecked
-                                    ? () {
-                                        _showUncheckDialog(
-                                          subcategory.id,
-                                          subcategory.name,
-                                        );
-                                      }
-                                    : () {
-                                        setState(() {
-                                          selectedSubcategories[index] =
-                                              !isSelected;
-                                          if (!isSelected) {
-                                            expandedCardIndex = index;
-                                          } else {
-                                            expandedCardIndex = null;
-                                            experienceYears[index] = "";
-                                            attachments[index] = null;
-                                          }
-                                        });
-                                      },
-                                child: Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: isAlreadyChecked
-                                        ? Colors.green
-                                        : isSelected
-                                        ? ColorConstant.moyoOrange
-                                        : Colors.white,
-                                    border: Border.all(
-                                      color: isAlreadyChecked
-                                          ? Colors.green
-                                          : isSelected
-                                          ? ColorConstant.moyoOrange
-                                          : Colors.grey[400]!,
-                                      width: 2,
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: (isAlreadyChecked || isSelected)
-                                      ? Icon(
-                                          Icons.check,
-                                          color: Colors.white,
-                                          size: 20,
-                                        )
-                                      : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      if (isExpanded)
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Divider(height: 1),
-                              SizedBox(height: 16),
-                              Text(
-                                'Year Of Experience',
-                                style: GoogleFonts.roboto(
-                                  fontSize: 14,
-                                  color: Colors.grey[700],
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[50],
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(color: Colors.grey[300]!),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: EdgeInsets.all(12),
-                                      child: Icon(
-                                        Icons.work_outline,
-                                        color: Colors.grey[700],
-                                        size: 24,
                                       ),
                                     ),
+                                    const SizedBox(width: 16),
                                     Expanded(
-                                      child: TextField(
-                                        keyboardType: TextInputType.number,
-                                        decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: '0',
-                                          hintStyle: GoogleFonts.roboto(
-                                            fontSize: 18,
-                                            color: Colors.grey[400],
-                                          ),
-                                        ),
+                                      child: Text(
+                                        subcategory.name,
                                         style: GoogleFonts.roboto(
                                           fontSize: 18,
                                           fontWeight: FontWeight.w600,
+                                          color: ColorConstant.black,
                                         ),
-                                        onChanged: (value) {
-                                          experienceYears[index] = value;
-                                        },
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: isAlreadyChecked
+                                          ? () {
+                                              _showUncheckDialog(
+                                                subcategory.id,
+                                                subcategory.name,
+                                              );
+                                            }
+                                          : () {
+                                              final mySkillProvider = context
+                                                  .read<MySkillProvider>();
+                                              if (!mySkillProvider
+                                                      .canAddMoreSkills &&
+                                                  !isSelected) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      mySkillProvider
+                                                          .maxSkillMessage,
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.orange[800],
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              setState(() {
+                                                selectedSubcategories[index] =
+                                                    !isSelected;
+                                                if (!isSelected) {
+                                                  expandedCardIndex = index;
+                                                } else {
+                                                  expandedCardIndex = null;
+                                                  experienceYears[index] = "";
+                                                  attachments[index] = null;
+                                                }
+                                              });
+                                            },
+                                      child: Container(
+                                        width: 28,
+                                        height: 28,
+                                        decoration: BoxDecoration(
+                                          color: isAlreadyChecked
+                                              ? Colors.green
+                                              : isSelected
+                                              ? ColorConstant.moyoOrange
+                                              : Colors.white,
+                                          border: Border.all(
+                                            color: isAlreadyChecked
+                                                ? Colors.green
+                                                : isSelected
+                                                ? ColorConstant.moyoOrange
+                                                : Colors.grey[400]!,
+                                            width: 2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: (isAlreadyChecked || isSelected)
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 20,
+                                              )
+                                            : null,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                              SizedBox(height: 16),
-                              InkWell(
-                                onTap: () => _pickFile(index),
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(vertical: 8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.grey[300]!,
-                                      width: 1.5,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.attach_file,
-                                        color: ColorConstant.black,
-                                        size: 24,
+                            ),
+                            if (isExpanded)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  0,
+                                  16,
+                                  16,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Divider(height: 1),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Year Of Experience',
+                                      style: GoogleFonts.roboto(
+                                        fontSize: 14,
+                                        color: Colors.grey[700],
+                                        fontWeight: FontWeight.w500,
                                       ),
-                                      SizedBox(width: 8),
-                                      Column(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[50],
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: Colors.grey[300]!,
+                                        ),
+                                      ),
+                                      child: Row(
                                         children: [
-                                          Text(
-                                            'Add Attachment',
-                                            style: GoogleFonts.roboto(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: ColorConstant.black,
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            child: Icon(
+                                              Icons.work_outline,
+                                              color: Colors.grey[700],
+                                              size: 24,
                                             ),
                                           ),
-                                          Text(
-                                            'PDF, PNG, JPG, JPEG • Max 5MB',
-                                            style: GoogleFonts.roboto(
-                                              fontSize: 12,
-                                              color: Colors.grey[600],
-                                              fontWeight: FontWeight.w500,
+                                          Expanded(
+                                            child: TextField(
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              decoration: const InputDecoration(
+                                                border: InputBorder.none,
+                                                hintText: '0',
+                                                hintStyle: TextStyle(
+                                                  fontSize: 18,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                              style: GoogleFonts.roboto(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                              onChanged: (value) {
+                                                experienceYears[index] = value;
+                                              },
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              if (attachments[index] != null) ...[
-                                SizedBox(height: 12),
-                                Container(
-                                  padding: EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Color(0xFFFFF4E6),
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: EdgeInsets.all(8),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    InkWell(
+                                      onTap: () => _pickFile(index),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
                                         decoration: BoxDecoration(
-                                          color: ColorConstant.moyoOrange,
+                                          color: Colors.white,
                                           borderRadius: BorderRadius.circular(
-                                            8,
+                                            10,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.grey[300]!,
+                                            width: 1.5,
                                           ),
                                         ),
-                                        child: Icon(
-                                          Icons.description,
-                                          color: Colors.white,
-                                          size: 24,
-                                        ),
-                                      ),
-                                      SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
                                           children: [
-                                            Text(
-                                              _getFileName(attachments[index]),
-                                              style: GoogleFonts.roboto(
-                                                fontSize: 14,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
+                                            Icon(
+                                              Icons.attach_file,
+                                              color: ColorConstant.black,
+                                              size: 24,
                                             ),
-                                            Text(
-                                              _getFileSize(attachments[index]),
-                                              style: GoogleFonts.roboto(
-                                                fontSize: 12,
-                                                color: Colors.grey[600],
-                                              ),
+                                            const SizedBox(width: 8),
+                                            Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                  'Add Attachment',
+                                                  style: GoogleFonts.roboto(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: ColorConstant.black,
+                                                  ),
+                                                ),
+                                                Text(
+                                                  'PDF, PNG, JPG, JPEG • Max 5MB',
+                                                  style: GoogleFonts.roboto(
+                                                    fontSize: 12,
+                                                    color: Colors.grey[600],
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ],
                                         ),
                                       ),
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.delete_outline,
-                                          color: Colors.grey[600],
+                                    ),
+                                    if (attachments[index] != null) ...[
+                                      const SizedBox(height: 12),
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color(0xFFFFF4E6),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            attachments[index] = null;
-                                          });
-                                        },
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: ColorConstant.moyoOrange,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              child: const Icon(
+                                                Icons.description,
+                                                color: Colors.white,
+                                                size: 24,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    _getFileName(
+                                                      attachments[index],
+                                                    ),
+                                                    style: GoogleFonts.roboto(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  Text(
+                                                    _getFileSize(
+                                                      attachments[index],
+                                                    ),
+                                                    style: GoogleFonts.roboto(
+                                                      fontSize: 12,
+                                                      color: Colors.grey[600],
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.grey[600],
+                                              ),
+                                              onPressed: () {
+                                                setState(() {
+                                                  attachments[index] = null;
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ],
-                                  ),
-                                ),
-                              ],
 
-                              // ✅ Display Explicit Sites
-                              _buildSiteSection(
-                                'Provider brings',
-                                subcategory.explicitSite,
-                                subcategoryProvider,
-                              ),
-
-                              // ✅ Display Implicit Sites
-                              _buildSiteSection(
-                                'Customer Provides',
-                                subcategory.implicitSite,
-                                subcategoryProvider,
-                              ),
-
-                              SizedBox(height: 16),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton(
-                                  onPressed: skillProvider.isLoading
-                                      ? null
-                                      : () => _submitSkill(index, subcategory),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: ColorConstant.moyoOrange,
-                                    foregroundColor: Colors.white,
-                                    padding: EdgeInsets.symmetric(vertical: 16),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
+                                    _buildSiteSection(
+                                      'Provider brings',
+                                      subcategory.explicitSite,
+                                      subcategoryProvider,
                                     ),
-                                    elevation: 0,
-                                  ),
-                                  child: skillProvider.isLoading
-                                      ? SizedBox(
-                                          height: 20,
-                                          width: 20,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor:
-                                                AlwaysStoppedAnimation<Color>(
-                                                  Colors.white,
-                                                ),
+                                    _buildSiteSection(
+                                      'Customer Provides',
+                                      subcategory.implicitSite,
+                                      subcategoryProvider,
+                                    ),
+
+                                    const SizedBox(height: 16),
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: ElevatedButton(
+                                        onPressed: skillProvider.isLoading
+                                            ? null
+                                            : () => _submitSkill(
+                                                index,
+                                                subcategory,
+                                              ),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              ColorConstant.moyoOrange,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 16,
                                           ),
-                                        )
-                                      : Text(
-                                          'Submit',
-                                          style: GoogleFonts.roboto(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w600,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                           ),
+                                          elevation: 0,
                                         ),
+                                        child: skillProvider.isLoading
+                                            ? const SizedBox(
+                                                height: 20,
+                                                width: 20,
+                                                child: CircularProgressIndicator(
+                                                  strokeWidth: 2,
+                                                  valueColor:
+                                                      AlwaysStoppedAnimation<
+                                                        Color
+                                                      >(Colors.white),
+                                                ),
+                                              )
+                                            : Text(
+                                                'Submit',
+                                                style: GoogleFonts.roboto(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                ),
+                                              ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
+                          ],
                         ),
-                    ],
-                  ),
+                      ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),

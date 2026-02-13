@@ -1,6 +1,4 @@
-
 import 'dart:convert';
-
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_flutter/widgets/user_only_title_appbar.dart';
 import 'package:flutter/material.dart';
@@ -11,7 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../constants/colorConstant/color_constant.dart';
 import '../../../providers/user_navigation_provider.dart';
-import '../../SubCategory/SubcategoryResponse.dart'; // ← updated model wala file
+import '../../SubCategory/SubcategoryResponse.dart';
 import 'RequestBroadcastScreen.dart';
 import 'UserInstantServiceProvider.dart';
 import 'UserLocationPickerScreen.dart';
@@ -130,7 +128,10 @@ class _UserInstantServiceScreenState extends State<UserInstantServiceScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: ColorConstant.moyoOrange,
                     ),
-                    child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                    child: const Text(
+                      'Retry',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ],
               ),
@@ -172,13 +173,14 @@ class _UserInstantServiceScreenState extends State<UserInstantServiceScreen> {
                         return _buildFieldWidget(
                           context,
                           field: field,
-                          provider: provider,
+                          provider: provider, selectedSubcategory: selectedSubcategory,
                         );
                       }).toList(),
 
                       _locationPickerField(context),
 
-                      if (selectedSubcategory.billingType.toLowerCase() == 'time')
+                      if (selectedSubcategory.billingType.toLowerCase() ==
+                          'time')
                         _timeBillingFields(context, selectedSubcategory),
 
                       if (widget.serviceType == 'later')
@@ -188,142 +190,283 @@ class _UserInstantServiceScreenState extends State<UserInstantServiceScreen> {
 
                       _paymentMethodField(context),
 
-                      if (selectedSubcategory.billingType.toLowerCase() == 'time')
+                      if (selectedSubcategory.billingType.toLowerCase() ==
+                          'time')
                         _tenureField(context),
 
                       _preRequisiteItems(context, selectedSubcategory),
 
+                      // _findServiceproviders(
+                      //   context,
+                      //   onPress: () async {
+                      //     final selectedMethod = provider.getFormValue(
+                      //       'payment_method',
+                      //     );
+                      //     if (selectedMethod == null ||
+                      //         selectedMethod.toString().isEmpty) {
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         const SnackBar(
+                      //           content: Text('Please select a payment method'),
+                      //           backgroundColor: Colors.red,
+                      //         ),
+                      //       );
+                      //       setState(() => _showValidationErrors = true);
+                      //       return;
+                      //     }
+
+                      //     setState(() => _showValidationErrors = true);
+
+                      //     if (provider.validateForm(
+                      //       serviceType: widget.serviceType,
+                      //     )) {
+                      //       showDialog(
+                      //         context: context,
+                      //         barrierDismissible: false,
+                      //         builder: (_) => const Center(
+                      //           child: CircularProgressIndicator(
+                      //             color: ColorConstant.moyoOrange,
+                      //           ),
+                      //         ),
+                      //       );
+
+                      //       final result = await provider.createService(
+                      //         categoryName: widget.categoryName ?? 'General',
+                      //         subcategoryName: selectedSubcategory.name,
+                      //         billingtype: selectedSubcategory.billingType,
+                      //         serviceType: widget.serviceType,
+                      //       );
+
+                      //       Navigator.pop(context);
+
+                      //       final prefs = await SharedPreferences.getInstance();
+                      //       final userId = prefs.getInt('user_id');
+
+                      //       // if (result['success'] == true) {
+                      //       //   final serviceId = result['serviceId'];
+                      //       //   final latitude = result['latitude'];
+                      //       //   final longitude = result['longitude'];
+
+                      //       //   Navigator.pushReplacement(
+                      //       //     context,
+                      //       //     MaterialPageRoute(
+                      //       //       builder: (_) => RequestBroadcastScreen(
+                      //       //         userId: userId,
+                      //       //         serviceId: serviceId,
+                      //       //         latitude: latitude,
+                      //       //         longitude: longitude,
+                      //       //         categoryName: widget.categoryName ?? 'General',
+                      //       //         subcategoryName: selectedSubcategory.name,
+                      //       //         amount: provider.getFormValue('budget')?.toString() ?? '0',
+                      //       //       ),
+                      //       //     ),
+                      //       //   );
+                      //       // }
+                      //       if (result['success'] == true) {
+                      //         final serviceId = result['serviceId']?.toString();
+                      //         final latitude =
+                      //             double.tryParse(
+                      //               result['latitude']?.toString() ?? '0',
+                      //             ) ??
+                      //             0.0;
+                      //         final longitude =
+                      //             double.tryParse(
+                      //               result['longitude']?.toString() ?? '0',
+                      //             ) ??
+                      //             0.0;
+                      //         final budget =
+                      //             provider.getFormValue('budget')?.toString() ??
+                      //             '0';
+
+                      //         // ────────────────────────────────────────────────
+                      //         // Define the key (add this line if not already present)
+                      //         const String kPendingBroadcastService =
+                      //             'pending_broadcast_service';
+
+                      //         // Prepare data to save
+                      //         final broadcastData = {
+                      //           'user_id': userId,
+                      //           'service_id': serviceId,
+                      //           'latitude': latitude,
+                      //           'longitude': longitude,
+                      //           'category_name':
+                      //               widget.categoryName ?? 'General',
+                      //           'subcategory_name': selectedSubcategory.name,
+                      //           'amount': budget,
+                      //           'created_at':
+                      //               DateTime.now().millisecondsSinceEpoch,
+                      //         };
+
+                      //         // Save it
+                      //         await prefs.setString(
+                      //           kPendingBroadcastService,
+                      //           jsonEncode(broadcastData),
+                      //         );
+
+                      //         print(
+                      //           "→ Saved pending broadcast data: $broadcastData",
+                      //         );
+
+                      //         // Then navigate
+                      //         Navigator.pushReplacement(
+                      //           context,
+                      //           MaterialPageRoute(
+                      //             builder: (_) => RequestBroadcastScreen(
+                      //               userId: userId,
+                      //               serviceId: serviceId,
+                      //               latitude: latitude,
+                      //               longitude: longitude,
+                      //               categoryName:
+                      //                   widget.categoryName ?? 'General',
+                      //               subcategoryName: selectedSubcategory.name,
+                      //               amount: budget,
+                      //             ),
+                      //           ),
+                      //         );
+                      //       } else {
+                      //         ScaffoldMessenger.of(context).showSnackBar(
+                      //           SnackBar(
+                      //             content: Text(
+                      //               provider.error ??
+                      //                   'Required fields are missing',
+                      //             ),
+                      //             backgroundColor: Colors.red,
+                      //           ),
+                      //         );
+                      //       }
+                      //     } else {
+                      //       ScaffoldMessenger.of(context).showSnackBar(
+                      //         SnackBar(
+                      //           content: Text(
+                      //             provider.getValidationError(
+                      //                   serviceType: widget.serviceType,
+                      //                 ) ??
+                      //                 'Please fill all required fields',
+                      //           ),
+                      //           backgroundColor: Colors.red,
+                      //         ),
+                      //       );
+                      //     }
+                      //   },
+                      // ),
+
+
                       _findServiceproviders(
-                        context,
-                        onPress: () async {
-                          final selectedMethod = provider.getFormValue('payment_method');
-                          if (selectedMethod == null || selectedMethod.toString().isEmpty) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Please select a payment method'),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                            setState(() => _showValidationErrors = true);
-                            return;
-                          }
+  context,
+  onPress: () async {
+    // 1. Sabse pehle safe reference le lo (crash ka main reason yahi solve karega)
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-                          setState(() => _showValidationErrors = true);
+    final selectedMethod = provider.getFormValue('payment_method');
+    if (selectedMethod == null || selectedMethod.toString().isEmpty) {
+      // Safe show
+      scaffoldMessenger.showSnackBar(
+        const SnackBar(
+          content: Text('Please select a payment method'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      setState(() => _showValidationErrors = true);
+      return;
+    }
 
-                          if (provider.validateForm(serviceType: widget.serviceType)) {
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (_) => const Center(
-                                child: CircularProgressIndicator(color: ColorConstant.moyoOrange),
-                              ),
-                            );
+    setState(() => _showValidationErrors = true);
 
-                            final result = await provider.createService(
-                              categoryName: widget.categoryName ?? 'General',
-                              subcategoryName: selectedSubcategory.name,
-                              billingtype: selectedSubcategory.billingType,
-                              serviceType: widget.serviceType,
-                            );
+    // Validation check
+    if (provider.validateForm(serviceType: widget.serviceType)) {
+      // Loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(
+          child: CircularProgressIndicator(color: ColorConstant.moyoOrange),
+        ),
+      );
 
-                            Navigator.pop(context);
-
-                            final prefs = await SharedPreferences.getInstance();
-                            final userId = prefs.getInt('user_id');
-
-                            // if (result['success'] == true) {
-                            //   final serviceId = result['serviceId'];
-                            //   final latitude = result['latitude'];
-                            //   final longitude = result['longitude'];
-
-                            //   Navigator.pushReplacement(
-                            //     context,
-                            //     MaterialPageRoute(
-                            //       builder: (_) => RequestBroadcastScreen(
-                            //         userId: userId,
-                            //         serviceId: serviceId,
-                            //         latitude: latitude,
-                            //         longitude: longitude,
-                            //         categoryName: widget.categoryName ?? 'General',
-                            //         subcategoryName: selectedSubcategory.name,
-                            //         amount: provider.getFormValue('budget')?.toString() ?? '0',
-                            //       ),
-                            //     ),
-                            //   );
-                            // } 
-                            if (result['success'] == true) {
-  final serviceId    = result['serviceId']?.toString();
-  final latitude     = double.tryParse(result['latitude']?.toString() ?? '0') ?? 0.0;
-  final longitude    = double.tryParse(result['longitude']?.toString() ?? '0') ?? 0.0;
-  final budget       = provider.getFormValue('budget')?.toString() ?? '0';
-
-  // ────────────────────────────────────────────────
-  // Define the key (add this line if not already present)
-  const String kPendingBroadcastService = 'pending_broadcast_service';
-
-  // Prepare data to save
-  final broadcastData = {
-    'user_id':          userId,
-    'service_id':       serviceId,
-    'latitude':         latitude,
-    'longitude':        longitude,
-    'category_name':    widget.categoryName ?? 'General',
-    'subcategory_name': selectedSubcategory.name,
-    'amount':           budget,
-    'created_at':       DateTime.now().millisecondsSinceEpoch,
-  };
-
-  // Save it
-  await prefs.setString(
-    kPendingBroadcastService,
-    jsonEncode(broadcastData),
-  );
-
-  print("→ Saved pending broadcast data: $broadcastData");
-
-  // Then navigate
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(
-      builder: (_) => RequestBroadcastScreen(
-        userId: userId,
-        serviceId: serviceId,
-        latitude: latitude,
-        longitude: longitude,
+      final result = await provider.createService(
         categoryName: widget.categoryName ?? 'General',
         subcategoryName: selectedSubcategory.name,
-        amount: budget,
-      ),
-    ),
-  );
-}
+        billingtype: selectedSubcategory.billingType,
+        serviceType: widget.serviceType,
+      );
 
-                            
+      // Dialog pop karne se pehle check karo widget abhi bhi zinda hai
+      if (mounted) {
+        Navigator.pop(context);
+      }
 
-                            
-                            else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    provider.error ?? 'Required fields are missing',
-                                  ),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  provider.getValidationError(serviceType: widget.serviceType) ??
-                                      'Please fill all required fields',
-                                ),
-                                backgroundColor: Colors.red,
-                              ),
-                            );
-                          }
-                        },
-                      ),
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('user_id');
+
+      if (result['success'] == true) {
+        final serviceId = result['serviceId']?.toString();
+        final latitude = double.tryParse(result['latitude']?.toString() ?? '0') ?? 0.0;
+        final longitude = double.tryParse(result['longitude']?.toString() ?? '0') ?? 0.0;
+        final budget = provider.getFormValue('budget')?.toString() ?? '0';
+
+        const String kPendingBroadcastService = 'pending_broadcast_service';
+
+        final broadcastData = {
+          'user_id': userId,
+          'service_id': serviceId,
+          'latitude': latitude,
+          'longitude': longitude,
+          'category_name': widget.categoryName ?? 'General',
+          'subcategory_name': selectedSubcategory.name,
+          'amount': budget,
+          'created_at': DateTime.now().millisecondsSinceEpoch,
+        };
+
+        await prefs.setString(kPendingBroadcastService, jsonEncode(broadcastData));
+        print("→ Saved pending broadcast data: $broadcastData");
+
+        // Navigation se pehle bhi mounted check
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => RequestBroadcastScreen(
+                userId: userId,
+                serviceId: serviceId,
+                latitude: latitude,
+                longitude: longitude,
+                categoryName: widget.categoryName ?? 'General',
+                subcategoryName: selectedSubcategory.name,
+                amount: budget,
+              ),
+            ),
+          );
+        }
+      } else {
+        // Error case – safe show
+        if (mounted) {
+          scaffoldMessenger.showSnackBar(
+            SnackBar(
+              content: Text(
+                provider.error ?? 'Required fields are missing',
+              ),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } else {
+      // Validation fail case – safe show + debug print
+      final errorMsg = provider.getValidationError(serviceType: widget.serviceType) ??
+          'Please fill all required fields';
+      
+      print('❌ VALIDATION FAILED → Reason: $errorMsg');
+
+      if (mounted) {
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  },
+),
 
                       const SizedBox(height: 20),
                     ],
@@ -341,7 +484,9 @@ class _UserInstantServiceScreenState extends State<UserInstantServiceScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const CircularProgressIndicator(color: ColorConstant.moyoOrange),
+                            const CircularProgressIndicator(
+                              color: ColorConstant.moyoOrange,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Creating your service...',
@@ -363,334 +508,427 @@ class _UserInstantServiceScreenState extends State<UserInstantServiceScreen> {
   // ──────────────────────────────────────────────────────────────
   // New: Unified field builder with dependency support
   // ──────────────────────────────────────────────────────────────
-Widget _buildFieldWidget(
-  BuildContext context, {
-  required Field field,
-  required UserInstantServiceProvider provider,
-}) {
-  // ─── 1. Dependency / Visibility check ────────────────────────────────
-  bool isVisible = true;
+  Widget _buildFieldWidget(
+    BuildContext context, {
+    required Field field,
+    required UserInstantServiceProvider provider,
+    required Subcategory selectedSubcategory,
+  }) {
+    // ─── 1. Dependency / Visibility check ────────────────────────────────
+    bool isVisible = true;
+    if (field.dependsOn != null && field.dependsValues != null && field.dependsValues!.isNotEmpty) {
+  final parentRaw = provider.getFormValue(field.dependsOn!);
+  final parentValue = parentRaw?.toString()?.trim() ?? '';
 
-  if (field.dependsOn != null && 
-      field.dependsValues != null && 
-      field.dependsValues!.isNotEmpty) {
-    
-    final parentRawValue = provider.getFormValue(field.dependsOn!);
-    final parentValue = parentRawValue?.toString().trim();
+  // Safe: trim each depends value + use any() instead of contains()
+  isVisible = parentValue.isNotEmpty &&
+      field.dependsValues!.any((dep) => dep.trim() == parentValue);
 
-    // Agar parent select nahi kiya → child hide
-    // Agar parent value matches → show
-    isVisible = parentValue != null && 
-                parentValue.isNotEmpty && 
-                field.dependsValues!.contains(parentValue);
-  }
-
-  // Jab field hide ho → uska value clear kar do (important!)
-  if (!isVisible) {
-    // Clear child value taaki next time parent change pe clean state rahe
-    if (provider.getFormValue(field.fieldName) != null) {
-      provider.updateFormValue(field.fieldName, null);
-    }
-    return const SizedBox.shrink();
-  }
-
-  // ─── 2. Common Title + Required Star ─────────────────────────────────
-  final titleWidget = Padding(
-    padding: const EdgeInsets.symmetric(vertical: 6),
-    child: Row(
-      children: [
-        Expanded(
-          child: Text(
-            field.fieldName,
-            style: Theme.of(context).textTheme.titleMedium,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        if (field.isRequired)
-          const Text(
-            " *",
-            style: TextStyle(color: Colors.red, fontSize: 16),
-          ),
-      ],
-    ),
-  );
-
-  // ─── 3. SELECT Field ─────────────────────────────────────────────────
-  if (field.fieldType.toLowerCase() == 'select' && 
-      (field.options?.isNotEmpty ?? false)) {
-    
-    final currentValue = provider.getFormValue(field.fieldName)?.toString()?.trim();
-    
-    // Validate: agar current value options mein nahi hai → null kar do
-    final validValue = field.options!.any((opt) => opt.label.trim() == currentValue)
-        ? currentValue
-        : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        titleWidget,
-        const SizedBox(height: 4),
-        DropdownButtonFormField<String>(
-          value: validValue,
-          isExpanded: true,
-          hint: Text(
-            'Select ${field.fieldName.toLowerCase()}',
-            style: const TextStyle(color: Color(0xFF686868)),
-          ),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: ColorConstant.moyoOrange, width: 1.5),
-            ),
-          ),
-          items: field.options!.map((opt) {
-            return DropdownMenuItem<String>(
-              value: opt.label,
-              child: Text(
-                opt.label,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontSize: 16,
-                ),
-              ),
-            );
-          }).toList(),
-          onChanged: (newValue) {
-            if (newValue != null) {
-              provider.updateFormValue(field.fieldName, newValue);
-              provider.recalculateBasePrice();
-              // Dependent fields ko force refresh (sabse important line)
-              provider.notifyListeners();
-            }
-          },
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  // ─── 4. NUMBER Field ─────────────────────────────────────────────────
-  if (field.fieldType.toLowerCase() == 'number') {
-    final currentValue = provider.getFormValue(field.fieldName)?.toString() ?? '';
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        titleWidget,
-        const SizedBox(height: 4),
-        TextField(
-          keyboardType: TextInputType.number,
-          controller: TextEditingController(text: currentValue)
-            ..selection = TextSelection.fromPosition(
-              TextPosition(offset: currentValue.length),
-            ),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 16),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            hintText: 'Enter ${field.fieldName.toLowerCase()}',
-            hintStyle: const TextStyle(color: Color(0xFF686868)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: ColorConstant.moyoOrange, width: 1.5),
-            ),
-          ),
-          onChanged: (value) {
-            provider.updateFormValue(field.fieldName, value);
-            provider.recalculateBasePrice();
-          },
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  // ─── 5. TEXTAREA Field ───────────────────────────────────────────────
-  if (field.fieldType.toLowerCase() == 'textarea') {
-    final currentValue = provider.getFormValue(field.fieldName)?.toString() ?? '';
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        titleWidget,
-        const SizedBox(height: 4),
-        TextField(
-          maxLines: 4,
-          minLines: 3,
-          keyboardType: TextInputType.multiline,
-          controller: TextEditingController(text: currentValue)
-            ..selection = TextSelection.fromPosition(
-              TextPosition(offset: currentValue.length),
-            ),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 16),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            hintText: 'Enter additional details...',
-            hintStyle: const TextStyle(color: Color(0xFF686868)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: ColorConstant.moyoOrange, width: 1.5),
-            ),
-          ),
-          onChanged: (value) {
-            provider.updateFormValue(field.fieldName, value);
-          },
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  // ─── 6. TEXT Field (single line) ─────────────────────────────────────
-  if (field.fieldType.toLowerCase() == 'text') {
-    final currentValue = provider.getFormValue(field.fieldName)?.toString() ?? '';
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        titleWidget,
-        const SizedBox(height: 4),
-        TextField(
-          keyboardType: TextInputType.text,
-          controller: TextEditingController(text: currentValue)
-            ..selection = TextSelection.fromPosition(
-              TextPosition(offset: currentValue.length),
-            ),
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontSize: 16),
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: Colors.white,
-            hintText: 'Type here...',
-            hintStyle: const TextStyle(color: Color(0xFF686868)),
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: BorderSide(color: ColorConstant.moyoOrange.withOpacity(0.3)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: ColorConstant.moyoOrange, width: 1.5),
-            ),
-          ),
-          onChanged: (value) {
-            provider.updateFormValue(field.fieldName, value);
-          },
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-
-  // Fallback agar koi unknown field type aaye
-  return const SizedBox.shrink();
+  print('Visibility: ${field.fieldName} → parent "$parentValue" → Visible? $isVisible');
 }
 
-  Widget _budgetTextField(BuildContext context) {
-  return Consumer<UserInstantServiceProvider>(
-    builder: (context, provider, _) {
-      final budgetValue = provider.getFormValue('budget')?.toString() ?? '';
-      
-      // Naya: calculated base price use karo
-      final base = provider.calculatedBasePrice;
-      final range = base != null ? {
-        'min': base * 0.7,
-        'max': base * 1.8,  // ya 2.0 — tum decide karo
-        'base': base,
-      } : null;
+    // if (field.dependsOn != null &&
+    //     field.dependsValues != null &&
+    //     field.dependsValues!.isNotEmpty) {
+    //   final parentRawValue = provider.getFormValue(field.dependsOn!);
+    //   final parentValue = parentRawValue?.toString().trim();
 
-      final errorText = budgetValue.isNotEmpty ? provider.validateBudget(budgetValue) : null;
+    //   // Agar parent select nahi kiya → child hide
+    //   // Agar parent value matches → show
+    //   isVisible =
+    //       parentValue != null &&
+    //       parentValue.isNotEmpty &&
+    //       field.dependsValues!.contains(parentValue);
+    // }
+
+    // Jab field hide ho → uska value clear kar do (important!)
+    if (!isVisible) {
+      // Clear child value taaki next time parent change pe clean state rahe
+      // if (provider.getFormValue(field.fieldName) != null) {
+      //   provider.updateFormValue(field.fieldName, null);
+      // }
+      return const SizedBox.shrink();
+    }
+
+    // ─── 2. Common Title + Required Star ─────────────────────────────────
+    final titleWidget = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              field.fieldName,
+              style: Theme.of(context).textTheme.titleMedium,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (field.isRequired)
+            const Text(" *", style: TextStyle(color: Colors.red, fontSize: 16)),
+        ],
+      ),
+    );
+
+    // ─── 3. SELECT Field ─────────────────────────────────────────────────
+    if (field.fieldType.toLowerCase() == 'select' &&
+        (field.options?.isNotEmpty ?? false)) {
+      final currentValue = provider
+          .getFormValue(field.fieldName)
+          ?.toString()
+          ?.trim();
+
+      // Validate: agar current value options mein nahi hai → null kar do
+      final validValue =
+          field.options!.any((opt) => opt.label.trim() == currentValue)
+          ? currentValue
+          : null;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
-            child: Row(
-              children: [
-                Text("Your Budget", style: Theme.of(context).textTheme.titleMedium),
-                const Text(" *", style: TextStyle(color: Colors.red)),
-              ],
+          titleWidget,
+          const SizedBox(height: 4),
+          DropdownButtonFormField<String>(
+            value: validValue,
+            isExpanded: true,
+            hint: Text(
+              'Select ${field.fieldName.toLowerCase()}',
+              style: const TextStyle(color: Color(0xFF686868)),
             ),
-          ),
-          TextField(
-            key: ValueKey('budget_${provider.selectedSubcategory?.id}'),
-            keyboardType: TextInputType.number,
-            controller: TextEditingController(text: budgetValue)
-              ..selection = TextSelection.fromPosition(TextPosition(offset: budgetValue.length)),
-            style: Theme.of(context).textTheme.titleMedium!.copyWith(fontSize: 18, color: Colors.black),
             decoration: InputDecoration(
               filled: true,
               fillColor: Colors.white,
-              hintText: range != null 
-                  ? 'Suggested: ₹${range['base']!.toStringAsFixed(0)}'
-                  : provider.getBudgetHint(),  // fallback purana hint
-              hintStyle: const TextStyle(color: Color(0xFF686868)),
-              prefixIcon: const Icon(Icons.currency_rupee),
-              errorText: errorText,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: errorText != null ? Colors.red : ColorConstant.moyoOrange),
+                borderSide: BorderSide(color: ColorConstant.moyoOrange),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: ColorConstant.moyoOrange.withOpacity(0.3),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: ColorConstant.moyoOrange,
+                  width: 1.5,
+                ),
               ),
             ),
-            onChanged: (value) => provider.updateFormValue('budget', value),
+            items: field.options!.map((opt) {
+              return DropdownMenuItem<String>(
+                value: opt.label,
+                child: Text(
+                  opt.label,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(fontSize: 16),
+                ),
+              );
+            }).toList(),
+            // onChanged: (newValue) {
+            //   print('🔥 SELECTED: Field = "${field.fieldName}" | New Value = "$newValue"');
+            //   if (newValue != null) {
+            //     provider.updateFormValue(field.fieldName, newValue);
+            //     provider.recalculateBasePrice();
+            //     // Dependent fields ko force refresh (sabse important line)
+            //     provider.notifyListeners();
+            //   }
+            // },
+
+            onChanged: (newValue) {
+  if (newValue != null) {
+    final trimmed = newValue.trim();
+    print('Parent changed: ${field.fieldName} → "$trimmed"');
+    provider.updateFormValue(field.fieldName, trimmed);
+    provider.recalculateBasePrice();
+
+    // Reset ONLY dependent fields when parent value changes
+    for (var depField in selectedSubcategory!.fields) {
+      if (depField.dependsOn == field.fieldName) {
+        print('Resetting dependent: ${depField.fieldName} (parent changed)');
+        provider.updateFormValue(depField.fieldName, null);
+      }
+    }
+
+    provider.notifyListeners();
+  }
+},
           ),
-          if (range != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Base: ₹${range['base']!.toStringAsFixed(0)} | Suggested range: ₹${range['min']!.toStringAsFixed(0)} - ₹${range['max']!.toStringAsFixed(0)}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
-              ),
-            )
-          else if (provider.calculatedBasePrice == null && provider.selectedSubcategory != null)
-            Padding(
-              padding: const EdgeInsets.only(top: 8),
-              child: Text(
-                'Calculating price... (select all required fields)',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.orange[800]),
-              ),
-            ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
         ],
       );
-    },
-  );
-}
+    }
+
+    // ─── 4. NUMBER Field ─────────────────────────────────────────────────
+    if (field.fieldType.toLowerCase() == 'number') {
+      final currentValue =
+          provider.getFormValue(field.fieldName)?.toString() ?? '';
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleWidget,
+          const SizedBox(height: 4),
+          TextField(
+            keyboardType: TextInputType.number,
+            controller: TextEditingController(text: currentValue)
+              ..selection = TextSelection.fromPosition(
+                TextPosition(offset: currentValue.length),
+              ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontSize: 16),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: 'Enter ${field.fieldName.toLowerCase()}',
+              hintStyle: const TextStyle(color: Color(0xFF686868)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: ColorConstant.moyoOrange),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: ColorConstant.moyoOrange.withOpacity(0.3),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: ColorConstant.moyoOrange,
+                  width: 1.5,
+                ),
+              ),
+            ),
+            onChanged: (value) {
+              provider.updateFormValue(field.fieldName, value);
+              provider.recalculateBasePrice();
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      );
+    }
+
+    // ─── 5. TEXTAREA Field ───────────────────────────────────────────────
+    if (field.fieldType.toLowerCase() == 'textarea') {
+      final currentValue =
+          provider.getFormValue(field.fieldName)?.toString() ?? '';
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleWidget,
+          const SizedBox(height: 4),
+          TextField(
+            maxLines: 4,
+            minLines: 3,
+            keyboardType: TextInputType.multiline,
+            controller: TextEditingController(text: currentValue)
+              ..selection = TextSelection.fromPosition(
+                TextPosition(offset: currentValue.length),
+              ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontSize: 16),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: 'Enter additional details...',
+              hintStyle: const TextStyle(color: Color(0xFF686868)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: ColorConstant.moyoOrange),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: ColorConstant.moyoOrange.withOpacity(0.3),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: ColorConstant.moyoOrange,
+                  width: 1.5,
+                ),
+              ),
+            ),
+            onChanged: (value) {
+              provider.updateFormValue(field.fieldName, value);
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      );
+    }
+
+    // ─── 6. TEXT Field (single line) ─────────────────────────────────────
+    if (field.fieldType.toLowerCase() == 'text') {
+      final currentValue =
+          provider.getFormValue(field.fieldName)?.toString() ?? '';
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          titleWidget,
+          const SizedBox(height: 4),
+          TextField(
+            keyboardType: TextInputType.text,
+            controller: TextEditingController(text: currentValue)
+              ..selection = TextSelection.fromPosition(
+                TextPosition(offset: currentValue.length),
+              ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontSize: 16),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: Colors.white,
+              hintText: 'Type here...',
+              hintStyle: const TextStyle(color: Color(0xFF686868)),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: ColorConstant.moyoOrange),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(
+                  color: ColorConstant.moyoOrange.withOpacity(0.3),
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: const BorderSide(
+                  color: ColorConstant.moyoOrange,
+                  width: 1.5,
+                ),
+              ),
+            ),
+            onChanged: (value) {
+              provider.updateFormValue(field.fieldName, value);
+            },
+          ),
+          const SizedBox(height: 20),
+        ],
+      );
+    }
+
+    // Fallback agar koi unknown field type aaye
+    return const SizedBox.shrink();
+  }
+
+  Widget _budgetTextField(BuildContext context) {
+    return Consumer<UserInstantServiceProvider>(
+      builder: (context, provider, _) {
+        final budgetValue = provider.getFormValue('budget')?.toString() ?? '';
+
+        // Naya: calculated base price use karo
+        final base = provider.calculatedBasePrice;
+        final range = base != null
+            ? {
+                'min': base * 0.7,
+                'max': base * 1.8, // ya 2.0 — tum decide karo
+                'base': base,
+              }
+            : null;
+
+        final errorText = budgetValue.isNotEmpty
+            ? provider.validateBudget(budgetValue)
+            : null;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 6),
+              child: Row(
+                children: [
+                  Text(
+                    "Your Budget",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const Text(" *", style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
+            TextField(
+              key: ValueKey('budget_${provider.selectedSubcategory?.id}'),
+              keyboardType: TextInputType.number,
+              controller: TextEditingController(text: budgetValue)
+                ..selection = TextSelection.fromPosition(
+                  TextPosition(offset: budgetValue.length),
+                ),
+              style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                fontSize: 18,
+                color: Colors.black,
+              ),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: Colors.white,
+                hintText: range != null
+                    ? 'Suggested: ₹${range['base']!.toStringAsFixed(0)}'
+                    : provider.getBudgetHint(), // fallback purana hint
+                hintStyle: const TextStyle(color: Color(0xFF686868)),
+                prefixIcon: const Icon(Icons.currency_rupee),
+                errorText: errorText,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                  borderSide: BorderSide(
+                    color: errorText != null
+                        ? Colors.red
+                        : ColorConstant.moyoOrange,
+                  ),
+                ),
+              ),
+              onChanged: (value) => provider.updateFormValue('budget', value),
+            ),
+            if (range != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Base: ₹${range['base']!.toStringAsFixed(0)} | Suggested range: ₹${range['min']!.toStringAsFixed(0)} - ₹${range['max']!.toStringAsFixed(0)}',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
+                ),
+              )
+            else if (provider.calculatedBasePrice == null &&
+                provider.selectedSubcategory != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  'Calculating price... (select all required fields)',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.orange[800]),
+                ),
+              ),
+            const SizedBox(height: 16),
+          ],
+        );
+      },
+    );
+  }
 
   Widget _locationPickerField(BuildContext context) {
     return Consumer<UserInstantServiceProvider>(
@@ -702,7 +940,10 @@ Widget _buildFieldWidget(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Row(
                 children: [
-                  Text("Service Location", style: Theme.of(context).textTheme.titleMedium),
+                  Text(
+                    "Service Location",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
                   const Text(" *", style: TextStyle(color: Colors.red)),
                 ],
               ),
@@ -719,7 +960,11 @@ Widget _buildFieldWidget(
                   ),
                 );
                 if (result != null) {
-                  provider.setLocation(result['latitude'], result['longitude'], result['address']);
+                  provider.setLocation(
+                    result['latitude'],
+                    result['longitude'],
+                    result['address'],
+                  );
                 }
               },
               child: Container(
@@ -728,24 +973,36 @@ Widget _buildFieldWidget(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: provider.location != null ? ColorConstant.moyoOrange : Colors.grey.shade300,
+                    color: provider.location != null
+                        ? ColorConstant.moyoOrange
+                        : Colors.grey.shade300,
                   ),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.location_on, color: ColorConstant.moyoOrange),
+                    const Icon(
+                      Icons.location_on,
+                      color: ColorConstant.moyoOrange,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
                         provider.location ?? 'Tap to select location',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: provider.location != null ? Colors.black : const Color(0xFF686868),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
+                              color: provider.location != null
+                                  ? Colors.black
+                                  : const Color(0xFF686868),
                             ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-                    const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16,
+                      color: Colors.grey,
+                    ),
                   ],
                 ),
               ),
@@ -760,7 +1017,10 @@ Widget _buildFieldWidget(
   // ... baaki widgets (_timeBillingFields, _paymentMethodField, _preRequisiteItems, etc.) same rakh sakte ho
   // agar unme koi change chahiye to bata dena, warna purane code se copy-paste kar lenge
 
-  Widget _findServiceproviders(BuildContext context, {required VoidCallback onPress}) {
+  Widget _findServiceproviders(
+    BuildContext context, {
+    required VoidCallback onPress,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 0),
       child: InkWell(
@@ -794,8 +1054,6 @@ Widget _buildFieldWidget(
 
   // Add your remaining methods (_moyoTextField, _tenureField, _durationFields, etc.) here
   // Most of them are unchanged from your original code
-
-
 
   Widget _timeBillingFields(BuildContext context, Subcategory subcategory) {
     print(widget.serviceType);
@@ -1449,6 +1707,7 @@ Widget _buildFieldWidget(
                     .toList() ??
                 [];
 
+
             // ✅ FIX: Only use currentValue if it exists in options
             final validValue = cleanOptions.contains(currentValue)
                 ? currentValue
@@ -1968,13 +2227,4 @@ Widget _buildFieldWidget(
       ],
     );
   }
-
-
-
-
 }
-
-
-
-
-

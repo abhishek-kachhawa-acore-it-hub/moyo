@@ -14,6 +14,14 @@ class MySkillProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
+
+  int get skillCount => _skills.length;
+
+  bool get canAddMoreSkills => skillCount < 10;
+
+  // Optional: agar message customize karna ho
+  String get maxSkillMessage => 'You can add maximum 10 skills only. You have already added $skillCount skills.';
+
   // Fetch all skills
   Future<void> fetchSkills() async {
     try {
@@ -199,6 +207,85 @@ class MySkillProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
   }
+
+
+
+  Future<bool> addSkill({
+  required String skillName,
+  required String serviceName,
+  required String experience,
+  File? proofDocument,
+}) async {
+  try {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('provider_auth_token');
+
+    if (token == null || token.isEmpty) {
+      _errorMessage = 'Authentication token not found';
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+
+    var request = http.MultipartRequest(
+      'POST',
+      Uri.parse('$base_url/api/provider/add-skills'),     // ← use the correct endpoint
+    );
+
+    request.headers['Authorization'] = 'Bearer $token';
+
+    request.fields['skill_name']   = skillName;
+    request.fields['service_name'] = serviceName;
+    request.fields['experience']   = experience;
+
+    if (proofDocument != null) {
+      var stream = http.ByteStream(proofDocument.openRead());
+      var length = await proofDocument.length();
+      var multipartFile = http.MultipartFile(
+        'proof_document',
+        stream,
+        length,
+        filename: proofDocument.path.split('/').last,
+      );
+      request.files.add(multipartFile);
+    }
+
+    var streamedResponse = await request.send();
+    var response = await http.Response.fromStream(streamedResponse);
+
+    print('Add skill response: ${response.statusCode} → ${response.body}');
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = json.decode(response.body);
+
+      if (data['success'] == true) {
+        // Most reliable: refresh full list after add
+        await fetchSkills();
+        // Alternative (faster but riskier): add only the new item
+        // if (data['data'] != null) {
+        //   _skills.add(Skill.fromJson(data['data']));
+        // }
+        return true;
+      } else {
+        _errorMessage = data['message'] ?? 'Failed to add skill';
+        return false;
+      }
+    } else {
+      _errorMessage = 'Server error: ${response.statusCode}';
+      return false;
+    }
+  } catch (e) {
+    _errorMessage = 'Exception: $e';
+    return false;
+  } finally {
+    _isLoading = false;
+    notifyListeners();
+  }
+}
 }
 
 class Skill {

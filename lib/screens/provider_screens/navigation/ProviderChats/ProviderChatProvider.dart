@@ -267,6 +267,8 @@ class ProviderChatProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('provider_auth_token');
+      final pid  = prefs.getInt('provider_id');
+      print('provieer id mil gayi $pid');
       if (token == null) {
         _error = 'Authentication token not found';
         _isLoading = false;
@@ -276,7 +278,7 @@ class ProviderChatProvider with ChangeNotifier {
 
       final requestBody = {
         'service_id': int.tryParse(serviceId) ?? serviceId,
-        'user_id': int.tryParse(providerId) ?? providerId,
+        'user_id': int.tryParse(providerId) ?? pid,
       };
 
       print("Request body: $requestBody");

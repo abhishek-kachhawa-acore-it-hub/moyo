@@ -15,6 +15,7 @@ class SkillProvider with ChangeNotifier {
   String? get errorMessage => _errorMessage;
   Map<String, dynamic>? get lastResponse => _lastResponse;
 
+
   // Add skill API call
   Future<Map<String, dynamic>?> addSkill({
     required String skillName,

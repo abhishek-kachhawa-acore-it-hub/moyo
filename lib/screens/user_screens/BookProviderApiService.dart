@@ -44,6 +44,7 @@ class BookProviderApiService {
         );
       }
     } catch (e) {
+      print('Error confirming provider: ${e.toString()}');
       throw Exception('Error confirming provider: ${e.toString()}');
     }
   }

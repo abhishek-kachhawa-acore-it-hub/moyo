@@ -1416,13 +1416,23 @@ void updateFormValue(String fieldName, dynamic value) {
 
     // Sirf visible fields ko check karo
     for (var field in _selectedSubcategory!.fields) {
+      // bool isVisible = true;
+      // if (field.dependsOn != null &&
+      //     field.dependsValues != null &&
+      //     field.dependsValues!.isNotEmpty) {
+      //   final parentValue = _formValues[field.dependsOn!]?.toString();
+      //   isVisible = field.dependsValues!.contains(parentValue);
+      // }
+
       bool isVisible = true;
-      if (field.dependsOn != null &&
-          field.dependsValues != null &&
-          field.dependsValues!.isNotEmpty) {
-        final parentValue = _formValues[field.dependsOn!]?.toString();
-        isVisible = field.dependsValues!.contains(parentValue);
-      }
+if (field.dependsOn != null && field.dependsValues != null && field.dependsValues!.isNotEmpty) {
+  final parentValue = _formValues[field.dependsOn!]?.toString()?.trim() ?? '';
+
+  isVisible = parentValue.isNotEmpty &&
+      field.dependsValues!.any((dep) => dep.trim() == parentValue);
+
+  print('   Dep check: ${field.fieldName} depends on ${field.dependsOn} = "$parentValue" → Visible? $isVisible');
+}
 
       if (isVisible && field.isRequired) {
         final value = _formValues[field.fieldName];
