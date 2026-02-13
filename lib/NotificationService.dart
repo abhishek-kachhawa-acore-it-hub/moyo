@@ -195,7 +195,7 @@ class NotificationService {
       }
 
       // Show local notification when app is in foreground with conditional sound
-      _showLocalNotification(message);
+      // _showLocalNotification(message);
     });
   }
 
