@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:async';
 
 import '../../../../constants/colorConstant/color_constant.dart';
@@ -121,9 +122,20 @@ Future<void> _initializeChat() async {
       listen: false,
     );
 
+       final prefs = await SharedPreferences.getInstance();
+
+      final providerId = prefs.getInt('provider_id');
+
+      print('abhishek bhai pro ID $providerId');
+
+    
+
     final success = await chatProvider.initiateChat(
       serviceId: widget.serviceId!,
-      providerId: widget.providerId!,
+      // providerId: widget.providerId ?? providerId.toString(),
+      providerId: providerId.toString()  ,
+
+      
     );
 
     if (success) {
@@ -389,6 +401,7 @@ Future<void> _initializeChat() async {
     _messageController.dispose();
     _scrollController.dispose();
     _focusNode.dispose();
+    Provider.of<ProviderChatProvider>(context, listen: false).reset();
     super.dispose();
   }
 

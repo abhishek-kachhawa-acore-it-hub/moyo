@@ -1,5 +1,6 @@
 // lib/screens/referral/referral_code_screen.dart
 
+import 'package:first_flutter/utils/preferences_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,7 +12,7 @@ import 'ReferralRepository.dart';
 import 'ReferralState.dart';
 
 class ReferralCodeScreen extends StatefulWidget {
-  const ReferralCodeScreen({Key? key}) : super(key: key);
+  const ReferralCodeScreen({super.key});
 
   @override
   State<ReferralCodeScreen> createState() => _ReferralCodeScreenState();
@@ -52,6 +53,8 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                   ),
                 );
 
+                PreferencesHelper.markReferralScreenAsSeen();
+
                 // Success ke baad next screen par navigate karein
                 // 2 seconds delay ke baad navigate karein
                 Future.delayed(Duration(seconds: 2), () {
@@ -81,6 +84,7 @@ class _ReferralCodeScreenState extends State<ReferralCodeScreen> {
                   ),
                 );
               } else if (state is ReferralSkipped) {
+                PreferencesHelper.markReferralScreenAsSeen();
                 // Skip ke baad immediately next screen par navigate karein
                 if (mounted) {
                   print(

@@ -77,19 +77,48 @@ class UserProfileProvider with ChangeNotifier {
       print('Profile API Response: ${response.statusCode}');
       print('Profile API Body: ${response.body}');
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+      // if (response.statusCode == 200) {
+      //   final data = jsonDecode(response.body);
 
-        if (data['profile'] != null) {
-          _userProfile = UserProfileModel.fromJson(data['profile']);
-           final providerid =  _userProfile!.provider!.id;
-           final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('provider_id', providerid);
-          _errorMessage = null;
-        } else {
-          throw Exception('Profile data not found in response');
-        }
-      }else if (response.statusCode == 403) {
+      //   if (data['profile'] != null) {
+      //     _userProfile = UserProfileModel.fromJson(data['profile']);
+      //     final providerid = _userProfile!.provider!.id;
+      //     final prefs = await SharedPreferences.getInstance();
+      //     await prefs.setInt('provider_id', providerid);
+      //     _errorMessage = null;
+      //   } else {
+      //     throw Exception('Profile data not found in response');
+      //   }
+      // }
+
+      if (response.statusCode == 200) {
+  final data = jsonDecode(response.body);
+
+  if (data['profile'] != null) {
+    _userProfile = UserProfileModel.fromJson(data['profile']);
+
+    // ────────────────────────────────────────────────
+    // Safely save provider_id ONLY if provider exists
+    // ────────────────────────────────────────────────
+    final prefs = await SharedPreferences.getInstance();
+
+    final provider = _userProfile?.provider;
+    if (provider != null) {
+      await prefs.setInt('provider_id', provider.id);
+      print("Provider ID saved: ${provider.id}");
+    } else {
+      print("User is not a provider (provider == null) → skipping provider_id save");
+      // Optional: remove old saved value if you want to clean up
+      // await prefs.remove('provider_id');
+    }
+
+    _errorMessage = null;
+  } else {
+    throw Exception('Profile data not found in response');
+  }
+}
+      
+       else if (response.statusCode == 403) {
         // Show modern blocked dialog
         if (context.mounted) {
           await BlockedDialog.show(context);
@@ -98,7 +127,7 @@ class UserProfileProvider with ChangeNotifier {
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/login',
-                  (route) => false,
+              (route) => false,
             );
           }
         }
@@ -111,7 +140,7 @@ class UserProfileProvider with ChangeNotifier {
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/login',
-                  (route) => false,
+              (route) => false,
             );
           }
         }
@@ -132,7 +161,10 @@ class UserProfileProvider with ChangeNotifier {
   }
 
   // Update user profile
-  Future<bool> updateProfile(Map<String, dynamic> userData,BuildContext context) async {
+  Future<bool> updateProfile(
+    Map<String, dynamic> userData,
+    BuildContext context,
+  ) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -185,7 +217,6 @@ class UserProfileProvider with ChangeNotifier {
     String? mobile,
   }) {
     if (_userProfile != null) {
-
       notifyListeners();
     }
   }
@@ -211,8 +242,7 @@ class UserProfileProvider with ChangeNotifier {
 
   // Get profile image URL with fallback
   String getProfileImageUrl() {
-    if (_userProfile == null ||
-        _userProfile!.displayImage.isEmpty) {
+    if (_userProfile == null || _userProfile!.displayImage.isEmpty) {
       return 'https://picsum.photos/200/200';
     }
     return _userProfile!.displayImage;

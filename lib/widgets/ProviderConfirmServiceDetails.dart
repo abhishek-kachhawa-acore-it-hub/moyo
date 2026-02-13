@@ -1808,77 +1808,81 @@ Future<bool> checkProvider(BuildContext context) async {
     );
   }
 
-  Widget _durationTypeDurationAndPrice(
-    BuildContext context,
-    String? durationType,
-    String? duration,
-    String? price,
-  ) {
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: ColorConstant.moyoOrangeFade,
-                borderRadius: BorderRadius.all(Radius.circular(50)),
-              ),
-              child: Text(
-                durationType ?? "No Duration",
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.roboto(
-                  textStyle: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
-                  color: ColorConstant.moyoOrange,
-                ),
-              ),
-            ),
-          ),
-          Flexible(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              spacing: 6,
-              children: [
-                SvgPicture.asset(
-                  "assets/icons/moyo_material-symbols_timer-outline.svg",
-                ),
-                Text(
-                  duration ?? "No Duration",
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: GoogleFonts.roboto(
-                    textStyle: Theme.of(
-                      context,
-                    ).textTheme.labelLarge?.copyWith(color: Color(0xFF000000)),
+ Widget _durationTypeDurationAndPrice(
+  BuildContext context,
+  String? durationType,
+  String? duration,
+  String? price,
+) {
+  final isDayMode = duration != null && duration.contains('day'); // ya service_mode check kar sakte ho
+
+  return Container(
+    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    child: Column(  // ← Row ki jagah Column use karo jab day mode ho
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Top row: Duration Type + Price
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (durationType != null && durationType.isNotEmpty)
+              Flexible(
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: ColorConstant.moyoOrangeFade,
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  child: Text(
+                    durationType,
+                    style: GoogleFonts.roboto(
+                      fontWeight: FontWeight.w500,
+                      color: ColorConstant.moyoOrange,
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          Flexible(
-            child: Text(
-              "₹ ${price ?? "No Price"} /-",
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.roboto(
-                textStyle: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Color(0xFF000000),
+              ),
+            if (price != null && price.isNotEmpty)
+              Text(
+                "₹$price/-",
+                style: GoogleFonts.roboto(
                   fontWeight: FontWeight.w700,
+                  fontSize: 16.sp,
                 ),
               ),
-            ),
+          ],
+        ),
+
+        SizedBox(height: 8.h),
+
+        // Duration (alag line mein – day mode ke liye perfect)
+        if (duration != null && duration.isNotEmpty)
+          Row(
+            children: [
+              SvgPicture.asset(
+                "assets/icons/moyo_material-symbols_timer-outline.svg",
+                width: 18.w,
+                height: 18.h,
+              ),
+              SizedBox(width: 6.w),
+              Expanded(
+                child: Text(
+                  duration,
+                  style: GoogleFonts.roboto(
+                    fontSize: 14.sp,
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  maxLines: 2,           // 2 lines tak allow karo
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
+}
 
   Widget _userAddress(BuildContext context, String? address) {
     return Container(

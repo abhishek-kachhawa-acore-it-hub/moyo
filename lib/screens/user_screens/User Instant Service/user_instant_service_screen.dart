@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:first_flutter/widgets/user_only_title_appbar.dart';
 import 'package:flutter/material.dart';
@@ -229,26 +231,77 @@ class _UserInstantServiceScreenState extends State<UserInstantServiceScreen> {
                             final prefs = await SharedPreferences.getInstance();
                             final userId = prefs.getInt('user_id');
 
-                            if (result['success'] == true) {
-                              final serviceId = result['serviceId'];
-                              final latitude = result['latitude'];
-                              final longitude = result['longitude'];
+                            // if (result['success'] == true) {
+                            //   final serviceId = result['serviceId'];
+                            //   final latitude = result['latitude'];
+                            //   final longitude = result['longitude'];
 
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => RequestBroadcastScreen(
-                                    userId: userId,
-                                    serviceId: serviceId,
-                                    latitude: latitude,
-                                    longitude: longitude,
-                                    categoryName: widget.categoryName ?? 'General',
-                                    subcategoryName: selectedSubcategory.name,
-                                    amount: provider.getFormValue('budget')?.toString() ?? '0',
-                                  ),
-                                ),
-                              );
-                            } else {
+                            //   Navigator.pushReplacement(
+                            //     context,
+                            //     MaterialPageRoute(
+                            //       builder: (_) => RequestBroadcastScreen(
+                            //         userId: userId,
+                            //         serviceId: serviceId,
+                            //         latitude: latitude,
+                            //         longitude: longitude,
+                            //         categoryName: widget.categoryName ?? 'General',
+                            //         subcategoryName: selectedSubcategory.name,
+                            //         amount: provider.getFormValue('budget')?.toString() ?? '0',
+                            //       ),
+                            //     ),
+                            //   );
+                            // } 
+                            if (result['success'] == true) {
+  final serviceId    = result['serviceId']?.toString();
+  final latitude     = double.tryParse(result['latitude']?.toString() ?? '0') ?? 0.0;
+  final longitude    = double.tryParse(result['longitude']?.toString() ?? '0') ?? 0.0;
+  final budget       = provider.getFormValue('budget')?.toString() ?? '0';
+
+  // ────────────────────────────────────────────────
+  // Define the key (add this line if not already present)
+  const String kPendingBroadcastService = 'pending_broadcast_service';
+
+  // Prepare data to save
+  final broadcastData = {
+    'user_id':          userId,
+    'service_id':       serviceId,
+    'latitude':         latitude,
+    'longitude':        longitude,
+    'category_name':    widget.categoryName ?? 'General',
+    'subcategory_name': selectedSubcategory.name,
+    'amount':           budget,
+    'created_at':       DateTime.now().millisecondsSinceEpoch,
+  };
+
+  // Save it
+  await prefs.setString(
+    kPendingBroadcastService,
+    jsonEncode(broadcastData),
+  );
+
+  print("→ Saved pending broadcast data: $broadcastData");
+
+  // Then navigate
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => RequestBroadcastScreen(
+        userId: userId,
+        serviceId: serviceId,
+        latitude: latitude,
+        longitude: longitude,
+        categoryName: widget.categoryName ?? 'General',
+        subcategoryName: selectedSubcategory.name,
+        amount: budget,
+      ),
+    ),
+  );
+}
+
+                            
+
+                            
+                            else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
                                   content: Text(

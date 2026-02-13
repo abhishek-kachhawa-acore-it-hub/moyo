@@ -242,7 +242,7 @@ class _CategoryCard extends StatelessWidget {
         width: cardWidth,
         height: 100, // Fixed height for consistency
         decoration: BoxDecoration(
-          color: Color(0xFFF7E5D1),
+          color: Color.fromARGB(255, 255, 221, 181),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(

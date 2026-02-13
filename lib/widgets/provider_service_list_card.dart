@@ -401,7 +401,8 @@ class _ProviderServiceListCardState extends State<ProviderServiceListCard> {
           textColor: Color(0xFF3F51B5),
         );
 
-      case 'in progress':
+      // case 'in progress':
+      case 'progress':
         return _buildStatusChip(
           context,
           text: "In Progress",

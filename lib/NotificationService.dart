@@ -5,6 +5,7 @@ import 'package:first_flutter/screens/provider_screens/confirm_provider_service_
 import 'package:first_flutter/screens/provider_screens/navigation/ProviderChats/ProviderChatScreen.dart';
 import 'package:first_flutter/screens/provider_screens/navigation/ProviderRatingScreen.dart';
 import 'package:first_flutter/screens/provider_screens/provider_service_details_screen.dart';
+import 'package:first_flutter/screens/user_screens/User%20Instant%20Service/RequestBroadcastScreen.dart';
 import 'package:first_flutter/screens/user_screens/navigation/UserChats/UserChatScreen.dart';
 import 'package:first_flutter/screens/user_screens/user_custom_bottom_nav.dart';
 import 'package:flutter/material.dart';
@@ -36,14 +37,15 @@ class NotificationService {
 
   // ================== CUSTOM SOUND CONFIGURATION ==================
   static const String _defaultSoundFileName = 'notification_sound';
-  static const String _serviceCompletedSoundFileName = 'notification_sound1';
+  static const String _serviceCompletedSoundFileName =
+      'notification_sound1'; // wow moyo sound
 
   // Helper method to get sound based on title
   static String _getSoundFileName(RemoteMessage message) {
     final title = message.notification?.title ?? '';
-    if (title == 'Service Completed') {
+    if (title == 'Service Completed' || title == 'service_completed') {
       print(
-        "🔊 Using SERVICE COMPLETED sound: $_serviceCompletedSoundFileName",
+        "🔊 Using SERVICE COMPLETED sound : $_serviceCompletedSoundFileName",
       );
       return _serviceCompletedSoundFileName;
     }
@@ -174,11 +176,23 @@ class NotificationService {
 
   // Handle Foreground Messages (App is Open)
   static void _setupForegroundMessageHandler() {
-    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       print("=== 🔔 FOREGROUND Message Received ===");
       print("Title: ${message.notification?.title}");
       print("Body: ${message.notification?.body}");
       print("Data: ${message.data}");
+      final idddd = message.data;
+
+      print("vdhdhvd $idddd");
+      final pref = await SharedPreferences.getInstance();
+
+      bool providerIdsss = pref.getBool("providerIdsss") ?? false;
+
+      print("dbdbfdhvhdvfhd $providerIdsss");
+
+      if (providerIdsss == false) {
+        _showLocalNotification(message);
+      }
 
       // Show local notification when app is in foreground with conditional sound
       _showLocalNotification(message);
@@ -442,11 +456,76 @@ class NotificationService {
   }
 
   // ================== Navigation Logic (UNCHANGED but with better logging) ==================
-  static void _performNavigation(
+  static Future<void> _performNavigation(
     BuildContext context,
     Map<String, dynamic> data,
-  ) {
+  ) async {
     print("🚀 Starting navigation with data: $data");
+
+    // PROVIDER AVAILABLE NOTIFICATION (USER SIDE)
+    if (data['title'] == 'Provider Available!' ||
+        (data.containsKey('notificationData') &&
+            data['type'] == 'service_update' &&
+            data['title'] == 'Provider Available!')) {
+      print("📍 [PROVIDER AVAILABLE] Handling notification tap");
+
+      final prefs = await SharedPreferences.getInstance();
+      const String kPendingBroadcastService = 'pending_broadcast_service';
+      final savedJson = prefs.getString(kPendingBroadcastService);
+
+      if (savedJson == null) {
+        print("⚠️ No pending broadcast data found in shared prefs");
+        // Optional: generic screen ya error dikha sakte ho
+        return;
+      }
+
+      try {
+        final broadcastData = jsonDecode(savedJson) as Map<String, dynamic>;
+
+        final userId = broadcastData['user_id'] as int?;
+        final serviceId = broadcastData['service_id']?.toString();
+        final latitude =
+            (broadcastData['latitude'] as num?)?.toDouble() ?? 22.7196;
+        final longitude =
+            (broadcastData['longitude'] as num?)?.toDouble() ?? 75.8577;
+        final categoryName =
+            broadcastData['category_name']?.toString() ?? 'General';
+        final subcategoryName = broadcastData['subcategory_name']?.toString();
+        final amount = broadcastData['amount']?.toString() ?? '0';
+
+        if (serviceId == null || userId == null) {
+          print("❌ Missing required fields in saved data");
+          return;
+        }
+
+        print("→ Opening RequestBroadcastScreen from saved data");
+
+        // Important: Terminated ya background se aane par → stack clear kar do
+        // Kyunki kill hone par purana instance nahi bachta → fresh screen chahiye
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (ctx) => RequestBroadcastScreen(
+              userId: userId,
+              serviceId: serviceId,
+              latitude: latitude,
+              longitude: longitude,
+              categoryName: categoryName,
+              subcategoryName: subcategoryName,
+              amount: amount,
+            ),
+          ),
+          (route) => false, // sab purane routes hata do
+        );
+
+        // Optional: notification use hone ke baad data clear kar dena
+        // prefs.remove(kPendingBroadcastService);
+
+        return;
+      } catch (e) {
+        print("❌ Error reading saved broadcast data: $e");
+        return;
+      }
+    }
 
     // Service Confirmed
     if (data.containsKey("type") &&
@@ -494,6 +573,12 @@ class NotificationService {
       print("   User: $userName");
       print("   Service ID: $serviceId");
 
+      final prefs = await SharedPreferences.getInstance();
+
+      final provID = prefs.getInt('provider_id');
+
+      print("abhsiehk bhai provideri ID : $provID");
+
       Navigator.of(context)
           .push(
             MaterialPageRoute(
@@ -504,15 +589,13 @@ class NotificationService {
                 isOnline: true,
                 userPhone: null,
                 serviceId: serviceId,
-                providerId: userId,
+                providerId: provID.toString(),
               ),
             ),
           )
           .then((_) => print("✅ Navigation to Chat complete"));
       return;
     }
-
-
 
     if (data.containsKey("type") &&
         data["type"] == "chat_message" &&
@@ -552,7 +635,12 @@ class NotificationService {
 
       print("📍 [SERVICE] Role: $role, Service ID: $serviceId");
 
-      if (role == "user") {
+      if (data['title'] == 'Provider Available!' ||
+          (data.containsKey('notificationData') &&
+              data['type'] == 'service_update' &&
+              data['title'] == 'Provider Available!')) {
+        print("📍 [PROVIDER AVAILABLE] Handling notification tap");
+      } else if (role == "user") {
         _navigateToUserServiceFromNotification(context, serviceId);
       }
       //  else if (role == "provider") {
@@ -680,6 +768,7 @@ class NotificationService {
   ) async {
     try {
       Navigator.pushAndRemoveUntil(
+        // Abhishek
         context,
         MaterialPageRoute(
           builder: (context) => UserCustomBottomNav(

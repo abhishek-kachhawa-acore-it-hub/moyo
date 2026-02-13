@@ -2,6 +2,7 @@
 import 'package:first_flutter/baseControllers/NavigationController/navigation_controller.dart';
 import 'package:first_flutter/constants/imgConstant/img_constant.dart';
 import 'package:first_flutter/constants/utils/app_text_style.dart';
+import 'package:first_flutter/utils/preferences_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -169,77 +170,167 @@ class _OtpScreenState extends State<OtpScreen> with CodeAutoFill {
   // ============================================================
   // UPDATED METHOD WITH REFERRAL CHECK
   // ============================================================
+  // Future<void> _verifyOtp() async {
+  //   final provider = context.read<OtpScreenProvider>();
+  //   final otp = _getOtpFromControllers();
+  //   final mobile = widget.phoneNumber;
+
+  //   if (otp.length != 6) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Please enter 6 digit code'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   print('=== Starting OTP verification ===');
+  //   print('Mobile: $mobile');
+
+  //   if (mobile == null || mobile.isEmpty) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Phone number is required'),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //     return;
+  //   }
+
+  //   final result = await provider.verifyOtp(
+  //     mobile: mobile,
+  //     otp: otp,
+  //     context: context,
+  //   );
+
+  //   if (result != null && mounted) {
+  //     // FIRST PRIORITY: Check if referral code is needed
+  //     if (result['needsReferralCode'] == true) {
+  //       print('Referral code needed, navigating to ReferralCodeScreen');
+
+  //       // Setup notifications before navigating
+  //       await _setupNotifications();
+
+  //       // Navigate to ReferralCodeScreen
+  //       Navigator.pushNamedAndRemoveUntil(
+  //         context,
+  //         "/ReferralCodeScreen",
+  //         (route) => false,
+  //       );
+  //       return;
+  //     }
+
+  //     // SECOND PRIORITY: Check if email verification is needed
+  //     if (result['needsEmailVerification'] == true) {
+  //       print(
+  //         'Email verification needed, navigating to email verification screen',
+  //       );
+  //       await _setupNotificationsAndNavigate();
+  //     } else {
+  //       // Both referral and email are complete
+  //       print('All verifications complete, navigating to home');
+  //       await _setupNotificationsAndNavigate();
+  //     }
+  //   } else if (provider.errorMessage != null && mounted) {
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(
+  //         content: Text(provider.errorMessage!),
+  //         backgroundColor: Colors.red,
+  //       ),
+  //     );
+  //   }
+  // }
+
+
   Future<void> _verifyOtp() async {
-    final provider = context.read<OtpScreenProvider>();
-    final otp = _getOtpFromControllers();
-    final mobile = widget.phoneNumber;
+  final provider = context.read<OtpScreenProvider>();
+  final otp = _getOtpFromControllers();
+  final mobile = widget.phoneNumber;
 
-    if (otp.length != 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter 6 digit code'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    print('=== Starting OTP verification ===');
-    print('Mobile: $mobile');
-
-    if (mobile == null || mobile.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Phone number is required'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    final result = await provider.verifyOtp(
-      mobile: mobile,
-      otp: otp,
-      context: context,
+  if (otp.length != 6) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please enter 6 digit code'),
+        backgroundColor: Colors.red,
+      ),
     );
-
-    if (result != null && mounted) {
-      // FIRST PRIORITY: Check if referral code is needed
-      if (result['needsReferralCode'] == true) {
-        print('Referral code needed, navigating to ReferralCodeScreen');
-
-        // Setup notifications before navigating
-        await _setupNotifications();
-
-        // Navigate to ReferralCodeScreen
-        Navigator.pushNamedAndRemoveUntil(
-          context,
-          "/ReferralCodeScreen",
-          (route) => false,
-        );
-        return;
-      }
-
-      // SECOND PRIORITY: Check if email verification is needed
-      if (result['needsEmailVerification'] == true) {
-        print(
-          'Email verification needed, navigating to email verification screen',
-        );
-        await _setupNotificationsAndNavigate();
-      } else {
-        // Both referral and email are complete
-        print('All verifications complete, navigating to home');
-        await _setupNotificationsAndNavigate();
-      }
-    } else if (provider.errorMessage != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(provider.errorMessage!),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
+    return;
   }
+
+  print('=== Starting OTP verification ===');
+  print('Mobile: $mobile');
+
+  if (mobile == null || mobile.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Phone number is required'),
+        backgroundColor: Colors.red,
+      ),
+    );
+    return;
+  }
+
+  final result = await provider.verifyOtp(
+    mobile: mobile,
+    otp: otp,
+    context: context,
+  );
+
+  if (result != null && mounted) {
+    // Check if user has already seen the referral screen (persistent flag)
+    final hasSeenReferral = await PreferencesHelper.hasSeenReferralScreen();
+
+    // ────────────────────────────────────────────────────────────────
+    // CASE 1: Server says referral is needed AND user hasn't seen it yet
+    // ────────────────────────────────────────────────────────────────
+    if (result['needsReferralCode'] == true && !hasSeenReferral) {
+      print('Referral code needed + first time → showing referral screen');
+
+      // Mark as seen FOREVER (or until you manually reset)
+      await PreferencesHelper.markReferralScreenAsSeen();
+
+      // Setup notifications before navigation
+      await _setupNotifications();
+
+      Navigator.pushNamedAndRemoveUntil(
+        context,
+        "/ReferralCodeScreen",
+        (route) => false,
+      );
+      return;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // CASE 2: Server wants referral, but user already saw/skipped it once
+    // ────────────────────────────────────────────────────────────────
+    if (result['needsReferralCode'] == true && hasSeenReferral) {
+      print('Referral needed but already seen once → skipping to home');
+      await _setupNotificationsAndNavigate();
+      return;
+    }
+
+    // ────────────────────────────────────────────────────────────────
+    // Normal flow (no referral needed or already handled)
+    // ────────────────────────────────────────────────────────────────
+    if (result['needsEmailVerification'] == true) {
+      print('Email verification needed, navigating to email screen');
+      // → Replace with your actual email verification navigation if different
+      await _setupNotificationsAndNavigate();
+    } else {
+      print('All verifications complete → going to home');
+      await _setupNotificationsAndNavigate();
+    }
+  } 
+  else if (provider.errorMessage != null && mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(provider.errorMessage!),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
+}
 
   Future<void> _setupNotifications() async {
     final provider = context.read<OtpScreenProvider>();

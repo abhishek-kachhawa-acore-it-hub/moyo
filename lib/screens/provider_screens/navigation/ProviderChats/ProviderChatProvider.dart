@@ -219,123 +219,124 @@ class ProviderChatProvider with ChangeNotifier {
   }
 
   Future<void> _setupSubscriptionsAndFetch() async {
-  if (_chatId == null) return;
+    if (_chatId == null) return;
 
-  bool natsConnected = _natsService.isConnected;
-  if (!natsConnected) {
-    try {
-      natsConnected = await _natsService.connect();
-    } catch (e) {
-      print("NATS connect failed: $e");
-    }
-  }
-
-  if (natsConnected) {
-    try {
-      // Fetch history first
-      final historySuccess = await fetchChatHistory(chatId: _chatId!);
-      if (historySuccess) {
-        await subscribeToMessages(chatId: _chatId!);
-        await subscribeToHistoryUpdates(chatId: _chatId!);
+    bool natsConnected = _natsService.isConnected;
+    if (!natsConnected) {
+      try {
+        natsConnected = await _natsService.connect();
+      } catch (e) {
+        print("NATS connect failed: $e");
       }
-    } catch (e) {
-      print("Post-init setup error: $e");
+    }
+
+    if (natsConnected) {
+      try {
+        // Fetch history first
+        final historySuccess = await fetchChatHistory(chatId: _chatId!);
+        if (historySuccess) {
+          await subscribeToMessages(chatId: _chatId!);
+          await subscribeToHistoryUpdates(chatId: _chatId!);
+        }
+      } catch (e) {
+        print("Post-init setup error: $e");
+      }
     }
   }
-}
 
   Future<bool> initiateChat({
-  required String serviceId,
-  required String providerId,
-  int retryCount = 0,
-}) async {
-  print("=== INITIATE CHAT (Attempt ${retryCount + 1}) ===");
+    required String serviceId,
+    required String providerId,
+    int retryCount = 0,
+  }) async {
+    print("=== INITIATE CHAT (Attempt ${retryCount + 1}) ===");
 
-  // ── CRITICAL GUARD: Skip if chat already exists ───────────────────────────
-  if (_chatId != null && _chatId!.isNotEmpty) {
-    print("Chat already initialized (ID: $_chatId) → skipping API call");
-    await _setupSubscriptionsAndFetch(); // Still ensure subscriptions & fetch
-    _isLoading = false;
+    // ── CRITICAL GUARD: Skip if chat already exists ───────────────────────────
+    if (_chatId != null && _chatId!.isNotEmpty) {
+      print("Chat already initialized (ID: $_chatId) → skipping API call");
+      await _setupSubscriptionsAndFetch(); // Still ensure subscriptions & fetch
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    }
+
+    _isLoading = true;
+    _error = null;
     notifyListeners();
-    return true;
-  }
 
-  _isLoading = true;
-  _error = null;
-  notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('provider_auth_token');
+      if (token == null) {
+        _error = 'Authentication token not found';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
 
-  try {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('provider_auth_token');
-    if (token == null) {
-      _error = 'Authentication token not found';
+      final requestBody = {
+        'service_id': int.tryParse(serviceId) ?? serviceId,
+        'user_id': int.tryParse(providerId) ?? providerId,
+      };
+
+      print("Request body: $requestBody");
+
+      final response = await http
+          .post(
+            Uri.parse('$base_url/bid/api/chat/provider/initiate'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode(requestBody),
+          )
+          .timeout(Duration(seconds: 12));
+
+      print("Status: ${response.statusCode}");
+      print("Response body: ${response.body}");
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['chat'] != null) {
+          final chatData = data['chat'];
+          _chatId =
+              chatData['id']?.toString() ?? chatData['chat_id']?.toString();
+
+          if (_chatId != null && _chatId!.isNotEmpty) {
+            await _setupSubscriptionsAndFetch();
+            _isLoading = false;
+            notifyListeners();
+            return true;
+          }
+        }
+        _error = data['message'] ?? 'Failed to initiate chat';
+      } else if (response.statusCode == 500) {
+        // Special handling for 500 – often duplicate
+        if (retryCount < 1) {
+          print("500 detected → auto retry once after delay");
+          await Future.delayed(Duration(milliseconds: 1200));
+          return initiateChat(
+            serviceId: serviceId,
+            providerId: providerId,
+            retryCount: retryCount + 1,
+          );
+        }
+        _error = 'Server error (500) - please try again';
+      } else {
+        _error = 'Server error (${response.statusCode})';
+      }
+
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      print("Exception in initiateChat: $e");
+      _error = 'Connection error: ${e.toString()}';
       _isLoading = false;
       notifyListeners();
       return false;
     }
-
-    final requestBody = {
-      'service_id': int.tryParse(serviceId) ?? serviceId,
-      'user_id': int.tryParse(providerId) ?? providerId,
-    };
-
-    print("Request body: $requestBody");
-
-    final response = await http
-        .post(
-          Uri.parse('$base_url/bid/api/chat/provider/initiate'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode(requestBody),
-        )
-        .timeout(Duration(seconds: 12));
-
-    print("Status: ${response.statusCode}");
-    print("Response body: ${response.body}");
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      if (data['success'] == true && data['chat'] != null) {
-        final chatData = data['chat'];
-        _chatId = chatData['id']?.toString() ?? chatData['chat_id']?.toString();
-
-        if (_chatId != null && _chatId!.isNotEmpty) {
-          await _setupSubscriptionsAndFetch();
-          _isLoading = false;
-          notifyListeners();
-          return true;
-        }
-      }
-      _error = data['message'] ?? 'Failed to initiate chat';
-    } else if (response.statusCode == 500) {
-      // Special handling for 500 – often duplicate
-      if (retryCount < 1) {
-        print("500 detected → auto retry once after delay");
-        await Future.delayed(Duration(milliseconds: 1200));
-        return initiateChat(
-          serviceId: serviceId,
-          providerId: providerId,
-          retryCount: retryCount + 1,
-        );
-      }
-      _error = 'Server error (500) - please try again';
-    } else {
-      _error = 'Server error (${response.statusCode})';
-    }
-
-    _isLoading = false;
-    notifyListeners();
-    return false;
-  } catch (e) {
-    print("Exception in initiateChat: $e");
-    _error = 'Connection error: ${e.toString()}';
-    _isLoading = false;
-    notifyListeners();
-    return false;
   }
-}
 
   Future<bool> sendMessage({required String message}) async {
     if (_chatId == null) {
@@ -401,26 +402,54 @@ class ProviderChatProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  // void reset() {
+  //   _isLoading = false;
+  //   _error = null;
+  //   _chatId = null;
+  //   _messages = [];
+  //   _isScreenActive = false;
+
+  //   // Unsubscribe from all subscriptions
+  //   if (_chatSubscription != null && _chatId != null) {
+  //     _natsService.unsubscribe('chat.message.$_chatId');
+  //     _chatSubscription = null;
+  //   }
+
+  //   if (_historySubscription != null && _chatId != null) {
+  //     _natsService.unsubscribe('chat.history.$_chatId');
+  //     _historySubscription = null;
+  //   }
+
+  //   notifyListeners();
+  // }
+
   void reset() {
-    _isLoading = false;
-    _error = null;
-    _chatId = null;
-    _messages = [];
-    _isScreenActive = false;
-
     // Unsubscribe from all subscriptions
-    if (_chatSubscription != null && _chatId != null) {
-      _natsService.unsubscribe('chat.message.$_chatId');
-      _chatSubscription = null;
-    }
 
-    if (_historySubscription != null && _chatId != null) {
-      _natsService.unsubscribe('chat.history.$_chatId');
-      _historySubscription = null;
-    }
+      // ✅ Store old chatId before clearing
+      final oldChatId = _chatId;
 
-    notifyListeners();
-  }
+      // ✅ Unsubscribe FIRST
+      if (_chatSubscription != null && oldChatId != null) {
+        _natsService.unsubscribe('chat.message.$oldChatId');
+        _chatSubscription = null;
+      }
+        if (_historySubscription != null && oldChatId != null) {
+          _natsService.unsubscribe('chat.history.$oldChatId');
+          _historySubscription = null;
+        }
+
+        // ✅ Now clear state
+        _isLoading = false;
+        _error = null;
+        _chatId = null;
+        _messages.clear();
+        _isScreenActive = false;
+
+        notifyListeners();
+      
+    }
+  
 
   @override
   void dispose() {

@@ -918,32 +918,73 @@ class _AssignedandCompleteUserServiceDetailsScreenState
     return '${months[date.month - 1]} ${date.day}';
   }
 
-  void _handleCompleteService(
-    BuildContext context,
-    RazorpayProvider razorpayProvider,
-  ) {
-    final amount =
-        double.tryParse(_serviceData?['budget']?.toString() ?? '0') ?? 0;
+  // void _handleCompleteService(
+  //   BuildContext context,
+  //   RazorpayProvider razorpayProvider,
+  // ) {
+  //   final amount =
+  //       double.tryParse(_serviceData?['budget']?.toString() ?? '0') ?? 0;
 
-    // FIXED: Correct user data access
+  //   // FIXED: Correct user data access
+  //   final providerData = _serviceData?['user'];
+  //   final providerUser = providerData?['user'];
+
+  //   final userName = providerUser != null
+  //       ? '${providerUser['firstname'] ?? ''} ${providerUser['lastname'] ?? ''}'
+  //             .trim()
+  //       : 'Customer';
+  //   final userPhone = providerUser?['mobile'] ?? '';
+  //   final userEmail = providerUser?['email'] ?? '';
+
+  //   if (amount <= 0) {
+  //     ScaffoldMessenger.of(
+  //       context,
+  //     ).showSnackBar(const SnackBar(content: Text('Invalid payment amount')));
+  //     return;
+  //   }
+
+  //   // Open Razorpay checkout
+  //   razorpayProvider.openCheckout(
+  //     amount: amount,
+  //     name: userName,
+  //     description: 'Payment for ${_serviceData?['service'] ?? 'Service'}',
+  //     contact: userPhone,
+  //     email: userEmail,
+  //   );
+  // }
+
+
+  void _handleCompleteService(
+  BuildContext context,
+  RazorpayProvider razorpayProvider,
+) {
+  final amount = double.tryParse(_serviceData?['budget']?.toString() ?? '0') ?? 0;
+  if (amount <= 0) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Invalid payment amount')),
+    );
+    return;
+  }
+
+  final paymentType = _serviceData?['payment_type']?.toString().toLowerCase() ?? '';
+  final isCashPayment = paymentType == 'cash' || paymentType == 'cod';
+
+  if (isCashPayment) {
+    // ────────────────────────────────────────────────
+    // CASH PAYMENT → Direct complete without Razorpay
+    // ────────────────────────────────────────────────
+    _showCashConfirmationDialog(context);
+  } else {
+    // ONLINE PAYMENT → Open Razorpay
     final providerData = _serviceData?['user'];
     final providerUser = providerData?['user'];
 
     final userName = providerUser != null
-        ? '${providerUser['firstname'] ?? ''} ${providerUser['lastname'] ?? ''}'
-              .trim()
+        ? '${providerUser['firstname'] ?? ''} ${providerUser['lastname'] ?? ''}'.trim()
         : 'Customer';
     final userPhone = providerUser?['mobile'] ?? '';
     final userEmail = providerUser?['email'] ?? '';
 
-    if (amount <= 0) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Invalid payment amount')));
-      return;
-    }
-
-    // Open Razorpay checkout
     razorpayProvider.openCheckout(
       amount: amount,
       name: userName,
@@ -952,6 +993,54 @@ class _AssignedandCompleteUserServiceDetailsScreenState
       email: userEmail,
     );
   }
+}
+
+
+
+Future<void> _showCashConfirmationDialog(BuildContext context) async {
+  final bool? confirm = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text("Cash Payment"),
+      content: const Text(
+        "Customer will pay in cash.\nDo you want to mark this service as completed?",
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text("No"),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text("Yes, Complete Service"),
+        ),
+      ],
+    ),
+  );
+
+  if (confirm == true && context.mounted) {
+    // Show loading
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Marking service as completed...")),
+    );
+
+    // Backend ko confirm bhejo (jaise payment success mein bhejte the)
+    await _confirmPaymentWithBackend("CASH_${DateTime.now().millisecondsSinceEpoch}");
+
+    // Optional: status refresh ya screen pop
+    if (mounted) {
+      setState(() {
+        _serviceData?['status'] = 'completed';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Service marked as completed (Cash)"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+}
 
   void _handlePaymentSuccess(String paymentId) {
     // Show success message
@@ -977,27 +1066,57 @@ class _AssignedandCompleteUserServiceDetailsScreenState
     );
   }
 
-  Future<void> _confirmPaymentWithBackend(String paymentId) async {
-    try {
-      final requestData = jsonEncode({
-        'service_id': widget.serviceId,
-        'payment_id': paymentId,
-        'amount': _serviceData?['budget'],
-        'status': 'completed',
-      });
+  // Future<void> _confirmPaymentWithBackend(String paymentId) async {
+  //   try {
+  //     final requestData = jsonEncode({
+  //       'service_id': widget.serviceId,
+  //       'payment_id': paymentId,
+  //       'amount': _serviceData?['budget'],
+  //       'status': 'completed',
+  //     });
 
-      final response = await _natsService.request(
-        'service.payment.confirm',
-        requestData,
-        timeout: const Duration(seconds: 5),
+  //     final response = await _natsService.request(
+  //       'service.payment.confirm',
+  //       requestData,
+  //       timeout: const Duration(seconds: 5),
+  //     );
+
+  //     if (response != null) {
+  //       debugPrint('✅ Payment confirmed with backend');
+  //       // Optionally navigate back or show completion screen
+  //     }
+  //   } catch (e) {
+  //     debugPrint('❌ Error confirming payment: $e');
+  //   }
+  // }
+
+
+  Future<void> _confirmPaymentWithBackend(String paymentIdOrMethod) async {
+  try {
+    final requestData = jsonEncode({
+      'service_id': widget.serviceId,
+      'payment_id': paymentIdOrMethod,        // Razorpay ID ya "CASH_xxxx"
+      'amount': _serviceData?['budget'],
+      'status': 'completed',
+      'payment_type': _serviceData?['payment_type'] ?? 'cash',
+    });
+
+    final response = await _natsService.request(
+      'service.payment.confirm',  // ya jo bhi tumhara endpoint hai
+      requestData,
+      timeout: const Duration(seconds: 5),
+    );
+
+    if (response != null) {
+      debugPrint('✅ Service completion confirmed with backend');
+    }
+  } catch (e) {
+    debugPrint('❌ Error confirming completion: $e');
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to update status: $e")),
       );
-
-      if (response != null) {
-        debugPrint('✅ Payment confirmed with backend');
-        // Optionally navigate back or show completion screen
-      }
-    } catch (e) {
-      debugPrint('❌ Error confirming payment: $e');
     }
   }
+}
 }

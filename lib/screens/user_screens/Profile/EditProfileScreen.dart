@@ -71,21 +71,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              ListTile(
-                leading: Icon(
-                  Icons.photo_library,
-                  color: ColorConstant.moyoOrange,
-                  size: 24.sp,
-                ),
-                title: Text(
-                  'Choose from Gallery',
-                  style: TextStyle(fontSize: 16.sp),
-                ),
-                onTap: () {
-                  Navigator.pop(context);
-                  provider.pickImageFromGallery();
-                },
-              ),
+              // ListTile(
+              //   leading: Icon(
+              //     Icons.photo_library,
+              //     color: ColorConstant.moyoOrange,
+              //     size: 24.sp,
+              //   ),
+              //   title: Text(
+              //     'Choose from Gallery',
+              //     style: TextStyle(fontSize: 16.sp),
+              //   ),
+              //   onTap: () {
+              //     Navigator.pop(context);
+              //     provider.pickImageFromGallery();
+              //   },
+              // ),
               ListTile(
                 leading: Icon(
                   Icons.camera_alt,

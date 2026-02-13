@@ -26,7 +26,9 @@ class FullScreenMapView extends StatefulWidget {
   State<FullScreenMapView> createState() => _FullScreenMapViewState();
 }
 
-class _FullScreenMapViewState extends State<FullScreenMapView> {
+
+class _FullScreenMapViewState extends State<FullScreenMapView>
+    with WidgetsBindingObserver {
   late final NatsService _natsService;
   GoogleMapController? _mapController;
   Set<Marker> _markers = {};
@@ -49,6 +51,7 @@ class _FullScreenMapViewState extends State<FullScreenMapView> {
   late double _currentProviderLng;
   late double _currentServiceLat;
   late double _currentServiceLng;
+   bool _hasOpenedNavigation = false;
 
   static const String GOOGLE_MAPS_API_KEY =
       'AIzaSyBqTGBtJYtoRpvJFpF6tls1jcwlbiNcEVI';
@@ -64,9 +67,28 @@ class _FullScreenMapViewState extends State<FullScreenMapView> {
     _currentProviderLng = 0.0;
     _currentServiceLat = 0.0;
     _currentServiceLng = 0.0;
+      WidgetsBinding.instance.addObserver(this);
 
     _loadCustomMarkers();
     _initializeNatsAndSubscribe();
+  }
+
+
+   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    if (state == AppLifecycleState.resumed) {
+      debugPrint("📱 App resumed from navigation");
+
+      // 🔥 You can run any logic here
+      _centerOnRoute();        // Recenter map
+      _setupMap(animate: true); // Refresh route if needed
+    }
+
+    if (state == AppLifecycleState.paused) {
+      debugPrint("🚀 App moved to background (Navigation opened)");
+    }
   }
 
   Future<void> _initializeNatsAndSubscribe() async {
@@ -199,6 +221,14 @@ class _FullScreenMapViewState extends State<FullScreenMapView> {
 
       // Update map with new locations
       _setupMap(animate: true);
+
+          if (!_hasOpenedNavigation) {
+        _hasOpenedNavigation = true;
+
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _openDirections();
+        });
+      }
     }
   }
 
@@ -947,6 +977,7 @@ class _FullScreenMapViewState extends State<FullScreenMapView> {
 
   @override
   void dispose() {
+     WidgetsBinding.instance.removeObserver(this);
     _locationSubscription?.unSub();
     _mapController?.dispose();
     super.dispose();
